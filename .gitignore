@@ -1,0 +1,23 @@
+# Secrets
+.env
+*.pem
+*.key
+connections.toml
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# IDE and OS
+.vscode/
+.idea/
+.DS_Store
+
+# Generated or temporary files
+tmp/
+logs/
+*.log
+
+# Streamlit secrets
+.streamlit/secrets.toml
