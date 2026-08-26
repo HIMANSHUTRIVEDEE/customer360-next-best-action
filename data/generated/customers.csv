@@ -1,0 +1,101 @@
+customer_id,household_id,first_name,last_name,customer_since,status,date_of_birth,email,phone,address_line_1,city,state,postal_code
+CUST-001,HH-001,Maria,Chen,2023-05-19,active,1982-05-15,maria.chen@example.com,555-0101,742 Evergreen Terrace,Springfield,IL,62704
+CUST-002,HH-002,James,Rodriguez,2024-02-08,active,1975-11-22,james.rodriguez@example.com,555-0102,456 Oak Ave,Austin,TX,78702
+CUST-003,HH-003,Patricia,Williams,2021-07-08,active,1968-03-08,patricia.williams@example.com,555-0103,789 Elm Dr,Portland,OR,97202
+CUST-004,HH-004,Robert,Thompson,2023-08-27,active,1980-07-30,robert.thompson@example.com,555-0104,321 Pine Rd,Denver,CO,80202
+CUST-005,HH-005,Linda,Martinez,2022-05-19,active,1972-09-12,linda.martinez@example.com,555-0105,654 Maple Ln,Seattle,WA,98102
+CUST-006,HH-006,Michael,Davis,2024-07-07,active,1985-01-25,michael.davis@example.com,555-0106,987 Cedar Ct,Boston,MA,02102
+CUST-007,HH-007,Jennifer,Garcia,2023-02-08,active,1979-06-18,jennifer.garcia@example.com,555-0107,147 Birch Way,Phoenix,AZ,85002
+CUST-008,HH-008,William,Anderson,2024-08-26,active,1990-04-05,william.anderson@example.com,555-0108,258 Walnut Blvd,Nashville,TN,37202
+CUST-009,HH-009,Elizabeth,Taylor,2023-07-08,active,1977-12-01,elizabeth.taylor@example.com,555-0109,369 Spruce Pl,Columbus,OH,43202
+CUST-010,HH-010,Daniel,Moore,2025-07-27,active,1995-08-20,daniel.moore@example.com,555-0110,471 Ash St,Charlotte,NC,28202
+CUST-011,HH-011,Richard,Wilson,2020-08-27,active,1970-02-14,richard.wilson@example.com,555-0111,582 Willow Ave,Minneapolis,MN,55402
+CUST-011B,HH-011,Susan,Wilson,2020-08-27,active,1972-10-03,susan.wilson@example.com,555-0112,582 Willow Ave,Minneapolis,MN,55402
+CUST-012,HH-012,Thomas,Clark,2018-05-20,active,1965-04-28,thomas.clark@example.com,555-0113,693 Poplar Dr,Raleigh,NC,27602
+CUST-0013,HH-013,Hayden,Anderson,2011-03-14,active,1990-03-16,hayden.anderson0@example.com,555-3813,456 Oak Ave,Raleigh,NC,27601
+CUST-0014,HH-014,Orion,Perez,2025-07-24,active,1954-12-19,orion.perez1@example.com,555-4366,369 Spruce Pl,Cincinnati,OH,45201
+CUST-0015,HH-015,Drew,Adams,2025-03-16,inactive,1974-02-06,drew.adams2@example.com,555-7827,654 Maple Ln,Denver,CO,80201
+CUST-0016,HH-016,Terry,Johnson,2014-02-20,active,1960-04-01,terry.johnson3@example.com,555-9256,459 Chestnut Pl,Portland,OR,97201
+CUST-0017,HH-017,Pat,Howard,2015-03-22,active,1996-04-15,pat.howard4@example.com,555-3647,672 Laurel Ave,Phoenix,AZ,85001
+CUST-0018,HH-018,Taylor,Carter,2021-07-04,active,1952-11-09,taylor.carter5@example.com,555-7420,258 Walnut Blvd,Boston,MA,02101
+CUST-0019,HH-019,Cedar,Scott,2016-04-24,active,1948-03-27,cedar.scott6@example.com,555-7607,237 Juniper Way,Raleigh,NC,27601
+CUST-0020,HH-020,Cameron,Mitchell,2022-12-20,active,1966-04-24,cameron.mitchell7@example.com,555-9562,123 Main St,Phoenix,AZ,85001
+CUST-0021,HH-021,Noel,Johnson,2018-12-12,active,1972-12-07,noel.johnson8@example.com,555-2284,123 Main St,Boston,MA,02101
+CUST-0022,HH-022,Hayden,Turner,2018-02-14,active,1992-05-03,hayden.turner9@example.com,555-3482,126 Sycamore Ct,Minneapolis,MN,55401
+CUST-0023,HH-023,Taylor,Bell,2022-05-30,active,1958-10-10,taylor.bell10@example.com,555-6526,348 Magnolia Blvd,Columbus,OH,43201
+CUST-0024,HH-024,Indigo,Harris,2015-12-24,active,1967-04-15,indigo.harris11@example.com,555-7561,582 Willow Ave,Columbus,OH,43201
+CUST-0025,HH-025,Finley,Cox,2021-09-15,active,1952-11-27,finley.cox12@example.com,555-9071,582 Willow Ave,Denver,CO,80201
+CUST-0026,HH-026,Ellis,Davis,2015-03-15,active,1963-08-22,ellis.davis13@example.com,555-3798,321 Pine Rd,Columbus,OH,43201
+CUST-0027,HH-027,Noel,Edwards,2025-06-29,active,1956-06-11,,555-3614,915 Hickory Ln,Minneapolis,MN,55401
+CUST-0028,HH-028,Kerry,Mitchell,2022-07-04,active,,kerry.mitchell15@example.com,555-4517,471 Ash St,Indianapolis,IN,46201
+CUST-0029,HH-029,Kerry,Johnson,2023-01-30,inactive,2002-10-01,,555-8657,147 Birch Way,Cincinnati,OH,45201
+CUST-0030,HH-030,Jules,Howard,2022-08-05,active,1973-03-16,jules.howard17@example.com,555-3955,693 Poplar Dr,Nashville,TN,37201
+CUST-0031,HH-031,Kendall,Mitchell,2018-11-27,active,1969-01-04,kendall.mitchell18@example.com,555-6949,126 Sycamore Ct,Seattle,WA,98101
+CUST-0032,HH-032,Pat,Jones,2013-06-01,active,1977-08-27,pat.jones19@example.com,555-2618,126 Sycamore Ct,San Diego,CA,92101
+CUST-0033,HH-033,Val,King,2022-10-16,active,,val.king20@example.com,555-6911,123 Main St,Seattle,WA,98101
+CUST-0034,HH-034,Briar,Morris,2022-05-09,inactive,1953-09-27,briar.morris21@example.com,555-4102,456 Oak Ave,Portland,OR,97201
+CUST-0035,HH-035,Uri,Edwards,2019-02-26,active,,uri.edwards22@example.com,555-1916,693 Poplar Dr,Kansas City,MO,64101
+CUST-0036,HH-036,Vic,Baker,2013-11-03,active,2008-12-10,vic.baker23@example.com,555-2760,915 Hickory Ln,San Diego,CA,92101
+CUST-0037,HH-037,Casey,Thompson,2024-01-15,active,1959-02-13,casey.thompson24@example.com,555-4455,456 Oak Ave,Seattle,WA,98101
+CUST-0038,HH-038,Winter,Walker,2023-12-13,active,1998-03-28,winter.walker25@example.com,555-4829,126 Sycamore Ct,Cincinnati,OH,45201
+CUST-0039,HH-039,Kerry,Howard,2013-01-11,active,2003-04-17,kerry.howard26@example.com,555-6201,987 Cedar Ct,Cincinnati,OH,45201
+CUST-0040,HH-040,Spencer,Baker,2012-05-25,active,1976-07-20,spencer.baker27@example.com,555-3024,369 Spruce Pl,Tampa,FL,33601
+CUST-0041,HH-041,Val,Perez,2019-02-23,active,1992-02-03,val.perez28@example.com,555-5222,258 Walnut Blvd,Indianapolis,IN,46201
+CUST-0042,HH-042,Kendall,Davis,2012-04-04,active,2007-06-22,kendall.davis29@example.com,555-2539,987 Cedar Ct,San Diego,CA,92101
+CUST-0043,HH-043,Harper,Collins,2011-09-18,active,1952-11-09,harper.collins30@example.com,555-5731,456 Oak Ave,San Diego,CA,92101
+CUST-0044,HH-044,Jules,Parker,2015-10-04,active,1978-10-13,jules.parker31@example.com,555-8421,789 Elm Dr,Indianapolis,IN,46201
+CUST-0045,HH-045,Adrian,Morgan,2013-09-28,active,1964-02-11,adrian.morgan32@example.com,555-3669,582 Willow Ave,Nashville,TN,37201
+CUST-0046,HH-046,Micah,Lewis,2020-05-26,active,1999-07-01,micah.lewis33@example.com,555-5363,582 Willow Ave,Charlotte,NC,28201
+CUST-0047,HH-047,Glenn,Cooper,2023-01-03,active,,glenn.cooper34@example.com,,693 Poplar Dr,Minneapolis,MN,55401
+CUST-0048,HH-048,Uri,Bailey,2012-04-14,active,,uri.bailey35@example.com,555-7102,348 Magnolia Blvd,Phoenix,AZ,85001
+CUST-0049,HH-049,Marlow,Mitchell,2023-07-28,active,1993-04-21,marlow.mitchell36@example.com,555-5955,126 Sycamore Ct,Springfield,IL,62701
+CUST-0050,HH-050,Adrian,Morris,2017-02-15,inactive,,adrian.morris37@example.com,555-8831,789 Elm Dr,Denver,CO,80201
+CUST-0051,HH-051,Harper,Green,2017-05-30,active,1970-07-02,harper.green38@example.com,555-2388,915 Hickory Ln,Portland,OR,97201
+CUST-0052,HH-052,Lane,Nelson,2017-11-12,active,1960-02-20,lane.nelson39@example.com,555-6800,693 Poplar Dr,Indianapolis,IN,46201
+CUST-0053,HH-053,Kendall,Young,2025-03-08,active,1948-02-10,kendall.young40@example.com,555-2000,582 Willow Ave,Columbus,OH,43201
+CUST-0054,HH-054,Casey,Ward,2015-06-19,active,1979-07-03,casey.ward41@example.com,555-4888,126 Sycamore Ct,Minneapolis,MN,55401
+CUST-0055,HH-055,Micah,Jones,2024-02-10,active,2002-03-05,micah.jones42@example.com,555-3610,348 Magnolia Blvd,Minneapolis,MN,55401
+CUST-0056,HH-056,Hayden,Morris,2013-08-06,active,1965-05-07,hayden.morris43@example.com,555-1076,915 Hickory Ln,Denver,CO,80201
+CUST-0057,HH-057,Cedar,Collins,2024-08-16,active,1959-06-01,cedar.collins44@example.com,555-7770,369 Spruce Pl,Pittsburgh,PA,15201
+CUST-0058,HH-058,Ray,Nelson,2017-07-15,active,1970-10-26,ray.nelson45@example.com,555-4579,561 Hawthorn St,San Diego,CA,92101
+CUST-0059,HH-059,Jamie,Walker,2019-08-18,active,1981-11-26,jamie.walker46@example.com,555-5002,459 Chestnut Pl,Minneapolis,MN,55401
+CUST-0060,HH-060,Marlow,Mitchell,2020-02-22,active,1979-02-09,marlow.mitchell47@example.com,555-4044,456 Oak Ave,Raleigh,NC,27601
+CUST-0061,HH-061,Yael,Howard,2021-01-14,active,1994-12-04,yael.howard48@example.com,555-6767,369 Spruce Pl,Indianapolis,IN,46201
+CUST-0062,HH-062,Pat,Perez,2014-10-29,active,,pat.perez49@example.com,555-7865,693 Poplar Dr,Portland,OR,97201
+CUST-0063,HH-063,Rowan,Clark,2012-08-20,active,1982-04-28,rowan.clark50@example.com,555-2679,321 Pine Rd,Salt Lake City,UT,84101
+CUST-0064,HH-064,Spencer,Bailey,2022-02-26,active,1998-06-06,spencer.bailey51@example.com,555-3058,789 Elm Dr,Cleveland,OH,44101
+CUST-0065,HH-065,Tatum,Roberts,2012-10-26,active,1959-12-13,tatum.roberts52@example.com,555-4963,237 Juniper Way,Raleigh,NC,27601
+CUST-0066,HH-066,Logan,Richardson,2012-06-07,active,,logan.richardson53@example.com,555-8931,123 Main St,Nashville,TN,37201
+CUST-0067,HH-067,Jules,Nelson,2018-09-29,active,2001-08-01,jules.nelson54@example.com,555-8391,123 Main St,Indianapolis,IN,46201
+CUST-0068,HH-068,Jules,Bailey,2023-09-11,inactive,1949-02-25,jules.bailey55@example.com,555-8669,123 Main St,Denver,CO,80201
+CUST-0069,HH-069,Uri,Miller,2017-06-13,active,1997-09-28,uri.miller56@example.com,555-4284,672 Laurel Ave,Denver,CO,80201
+CUST-0070,HH-070,Sam,Davis,2013-12-11,active,,sam.davis57@example.com,555-4187,147 Birch Way,Indianapolis,IN,46201
+CUST-0071,HH-071,Logan,Smith,2011-03-18,active,1995-10-03,logan.smith58@example.com,555-7676,258 Walnut Blvd,Nashville,TN,37201
+CUST-0072,HH-072,Uri,Cooper,2011-03-25,active,1992-10-04,uri.cooper59@example.com,555-1565,126 Sycamore Ct,Nashville,TN,37201
+CUST-0073,HH-073,Adrian,Anderson,2017-11-10,active,2008-02-19,adrian.anderson60@example.com,555-6102,789 Elm Dr,Charlotte,NC,28201
+CUST-0074,HH-074,Casey,Scott,2019-07-23,active,1976-04-07,casey.scott61@example.com,555-3504,804 Cherry Rd,Portland,OR,97201
+CUST-0075,HH-075,Logan,Young,2016-06-09,active,1966-09-11,logan.young62@example.com,,321 Pine Rd,San Diego,CA,92101
+CUST-0076,HH-076,Uri,Cooper,2022-02-09,active,1987-06-07,uri.cooper63@example.com,555-8252,459 Chestnut Pl,Raleigh,NC,27601
+CUST-0077,HH-077,Holly,Rivera,2023-05-02,active,,holly.rivera64@example.com,555-9946,693 Poplar Dr,Salt Lake City,UT,84101
+CUST-0078,HH-078,Glenn,Garcia,2022-03-14,active,1977-02-02,glenn.garcia65@example.com,555-7955,654 Maple Ln,Minneapolis,MN,55401
+CUST-0079,HH-079,Riley,Jones,2013-11-06,active,1963-05-24,riley.jones66@example.com,555-8390,459 Chestnut Pl,Portland,OR,97201
+CUST-0080,HH-080,Ray,Bailey,2024-11-25,active,,,555-8012,237 Juniper Way,Pittsburgh,PA,15201
+CUST-0081,HH-081,Hayden,Roberts,2020-08-01,active,1987-02-03,hayden.roberts68@example.com,,126 Sycamore Ct,Charlotte,NC,28201
+CUST-0082,HH-082,Rowan,Harris,2013-09-07,active,1946-08-04,rowan.harris69@example.com,555-9013,237 Juniper Way,Raleigh,NC,27601
+CUST-0083,HH-083,Riley,Carter,2025-04-19,active,1950-08-05,riley.carter70@example.com,555-5331,147 Birch Way,Denver,CO,80201
+CUST-0084,HH-084,Jordan,Davis,2017-04-07,active,1956-11-04,jordan.davis71@example.com,555-1185,789 Elm Dr,Charlotte,NC,28201
+CUST-0085,HH-085,Robin,Reed,2019-02-05,active,1990-08-09,robin.reed72@example.com,555-3517,582 Willow Ave,Denver,CO,80201
+CUST-0086,HH-086,Terry,Davis,2014-05-08,active,,terry.davis73@example.com,555-9609,561 Hawthorn St,San Diego,CA,92101
+CUST-0087,HH-087,Noel,Young,2012-07-01,active,1979-11-08,noel.young74@example.com,555-9281,987 Cedar Ct,Nashville,TN,37201
+CUST-0088,HH-088,Val,Ward,2024-07-29,active,1991-11-03,val.ward75@example.com,555-5625,147 Birch Way,Charlotte,NC,28201
+CUST-0089,HH-089,Lane,Baker,2023-06-24,active,,lane.baker76@example.com,555-6945,915 Hickory Ln,Kansas City,MO,64101
+CUST-0090,HH-090,Jules,Howard,2012-10-13,active,1951-01-27,jules.howard77@example.com,555-8037,348 Magnolia Blvd,Raleigh,NC,27601
+CUST-0091,HH-091,Terry,Stewart,2012-02-12,inactive,2006-04-09,terry.stewart78@example.com,555-6369,147 Birch Way,Tampa,FL,33601
+CUST-0092,HH-092,Taylor,Lewis,2020-09-21,active,1975-04-06,taylor.lewis79@example.com,555-3572,123 Main St,Springfield,IL,62701
+CUST-0093,HH-093,Blake,Green,2021-09-15,active,1991-10-28,blake.green80@example.com,555-4913,126 Sycamore Ct,Denver,CO,80201
+CUST-0094,HH-094,Parker,Bell,2018-12-15,active,1969-05-19,parker.bell81@example.com,555-4806,987 Cedar Ct,Charlotte,NC,28201
+CUST-0095,HH-095,Quinn,Perez,2015-04-20,active,1989-02-25,quinn.perez82@example.com,555-1848,672 Laurel Ave,Denver,CO,80201
+CUST-0096,HH-096,Lee,Wright,2018-02-09,active,,lee.wright83@example.com,555-2673,123 Main St,Charlotte,NC,28201
+CUST-0097,HH-097,Ellis,Campbell,2014-06-11,active,1970-09-02,ellis.campbell84@example.com,555-1473,471 Ash St,Seattle,WA,98101
+CUST-0098,HH-098,Avery,Morgan,2019-11-30,active,1991-09-27,avery.morgan85@example.com,555-8889,561 Hawthorn St,Boston,MA,02101
+CUST-0099,HH-099,Holly,Jones,2011-03-31,active,2006-01-08,holly.jones86@example.com,555-7142,369 Spruce Pl,Springfield,IL,62701

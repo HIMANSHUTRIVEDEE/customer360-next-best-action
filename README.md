@@ -37,7 +37,7 @@ Other personas (retention specialist, claims adjuster, field agent, operations m
 Select customer → Understand context → Explain risk → Recommend action → Approve/create follow-up
 ```
 
-**Scenario:** Maria Chen — multi-policy household (auto + home). Auto renewal in 14 days. Two recent negative interactions (claim delay complaint, premium inquiry with frustrated tone). Payment history current.
+**Scenario:** Maria Chen — multi-policy household (auto + home). Auto renewal in 16 days. Two recent negative interactions (claim delay complaint, premium inquiry with frustrated tone). Payment history current.
 
 **Expected outcome:** System recommends "Acknowledge prior service issues, offer eligible loyalty adjustment, confirm coverage adequacy" with evidence (2 negative transcripts, renewal countdown, multi-policy flag). Rep approves. Decision logged.
 
@@ -48,14 +48,14 @@ RAW Schema              ANALYTICS Schema              DECISION Schema
 (synthetic data)        (enrichment + 360 view)       (immutable audit)
                               │
 ┌─────────────┐    ┌─────────┴──────────┐    ┌──────────────────┐
-│ CUSTOMERS   │    │ INTERACTIONS       │    │ DECISION_LOG     │
-│ POLICIES    │───▶│ _ENRICHED (DT)     │    │ (append-only)    │
-│ CLAIMS      │    │ Cortex SENTIMENT   │    │                  │
-│ PAYMENTS    │    ├────────────────────┤    │ ACTION_OUTCOME   │
-│ INTERACTIONS│───▶│ CUSTOMER_360 (DT)  │───▶│ (async)          │
-│ TRANSCRIPTS │    │ Pre-aggregated     │    └──────────────────┘
-└─────────────┘    │ serving view       │              ▲
-                   └────────────────────┘              │
+│ CUSTOMERS   │    │ INTERACTIONS       │    │ RECOMMENDATION   │
+│ POLICIES    │───▶│ _ENRICHED (DT)     │    │ _LOG             │
+│ CLAIMS      │    │ Cortex SENTIMENT   │    │ FOLLOW_UP_LOG    │
+│ PAYMENTS    │    ├────────────────────┤    │ DECISION_AUDIT   │
+│ INTERACTIONS│───▶│ CUSTOMER_360 (DT)  │───▶│ _EVENT           │
+│ TRANSCRIPTS │    │ Pre-aggregated     │    │ ACTION_OUTCOME   │
+└─────────────┘    │ serving view       │    └──────────────────┘
+                   └────────────────────┘              ▲
                               │                        │
                    ┌──────────▼──────────┐    ┌───────┴────────┐
                    │ Streamlit App       │    │ Human Approval  │
@@ -65,31 +65,103 @@ RAW Schema              ANALYTICS Schema              DECISION Schema
                    └─────────────────────┘    └────────────────┘
 ```
 
-**3 schemas. 2 dynamic tables. 3 roles. Deterministic scoring. Human approval gate.**
+**3 schemas. 2 dynamic tables. 4 roles. Deterministic scoring. Human approval gate.**
+
+## Synthetic Data
+
+Deterministic generator (seed=42) producing realistic insurance data:
+
+| Dataset | Rows | Purpose |
+|---------|------|---------|
+| Customers | 100 | Households, contact info, lifecycle status |
+| Policies | 250 | Auto, home, umbrella, renters with renewal dates |
+| Coverages | 565 | Liability, collision, dwelling components |
+| Claims | 30 | Filed, settled, open claims |
+| Payments | 669 | On-time, late, grace-period patterns |
+| Interactions | 200 | Phone, email, chat with disposition |
+| Transcripts | 50 | Call transcripts, emails with consent flags |
+| Service Reps | 5 | Active representatives for audit |
+
+**12 named scenarios** cover the golden demo, positive/negative paths, edge cases (no interactions, missing consent, contradictory signals), and fallback conditions. See `data/scenarios/scenario-catalog.md`.
+
+## Snowflake Schema Layers
+
+| Schema | Purpose | Owner |
+|--------|---------|-------|
+| `CUSTOMER360_DB.RAW` | Source data landing (append-only) | C360_DATA_ENGINEER |
+| `CUSTOMER360_DB.ANALYTICS` | Enrichment, Customer 360 DT, config (future) | C360_DATA_ENGINEER |
+| `CUSTOMER360_DB.DECISION` | Immutable audit: recommendations, follow-ups, outcomes (future) | C360_ADMIN |
+
+## Security Roles
+
+| Role | Access | Restrictions |
+|------|--------|-------------|
+| `C360_DATA_ENGINEER` | Owns RAW + ANALYTICS; loads data; manages pipeline | No access to DECISION schema |
+| `C360_SERVICE_APP` | Reads ANALYTICS; inserts DECISION (future) | No RAW access; no DDL; no UPDATE/DELETE |
+| `C360_AUDITOR` | Reads DECISION + ANALYTICS (masked PII) | No write anywhere; no RAW access |
+| `C360_ADMIN` | Owns DB + warehouse; manages grants | Does not inherit data roles |
+
+Flat hierarchy. No role inherits from another. PUBLIC revoked on all project objects.
 
 ## MVP Features
 
 | # | Feature | Status |
 |---|---------|--------|
-| 1 | Synthetic structured + unstructured data (100 customers, 500 policies, 50 transcripts) | Planned |
-| 2 | Customer 360 dynamic table (pre-aggregated, <5s query) | Planned |
-| 3 | Transcript enrichment via Cortex AI (sentiment + topics with provenance) | Planned |
-| 4 | Semantic model for natural-language querying | Planned |
-| 5 | Explainable risk signals (deterministic, weighted, directional) | Planned |
-| 6 | Next Best Action engine (rule-based scoring, eligibility filtering) | Planned |
-| 7 | Confidence level + evidence trail per recommendation | Planned |
-| 8 | Human review gate (approve/modify/reject — no auto-execution) | Planned |
-| 9 | Streamlit-in-Snowflake application (5-step decision-support flow) | Planned |
-| 10 | Pipeline automation (dynamic tables, incremental refresh) | Planned |
-| 11 | RBAC + dynamic data masking + audit logging | Planned |
-| 12 | Testing (pipeline, NBA determinism, RBAC, AI safety, fallback) | Planned |
+| 1 | Synthetic structured + unstructured data (100 customers, 250 policies, 50 transcripts) | **Complete** |
+| 2 | Snowflake RAW foundation (database, warehouse, schemas, roles, tables, stage, load) | **Complete** |
+| 3 | RBAC + least-privilege grants + security tests | **Complete** |
+| 4 | Customer 360 dynamic table (pre-aggregated, <5s query) | Planned |
+| 5 | Transcript enrichment via Cortex AI (sentiment + topics with provenance) | Planned |
+| 6 | Semantic model for natural-language querying | Planned |
+| 7 | Explainable risk signals (deterministic, weighted, directional) | Planned |
+| 8 | Next Best Action engine (rule-based scoring, eligibility filtering) | Planned |
+| 9 | Confidence level + evidence trail per recommendation | Planned |
+| 10 | Human review gate (approve/modify/reject — no auto-execution) | Planned |
+| 11 | Streamlit-in-Snowflake application (5-step decision-support flow) | Planned |
+| 12 | Pipeline automation (dynamic tables, 1-minute freshness objective) | Planned |
 
 ## CoCo Lifecycle Status
 
 - [x] **Planning** — Complete. Problem, ontology, data model, architecture, security, and scope defined.
-- [ ] **Development** — Next. Synthetic data, schema, pipelines, NBA engine, Streamlit app.
+- [ ] **Development** — In progress. Synthetic data generated and loaded. Enrichment pipeline next.
 - [ ] **Execution** — Pending. End-to-end pipeline, golden demo, deployment.
 - [ ] **Testing** — Pending. 14 security tests, pipeline correctness, determinism, fallback.
+
+## Reproduction Instructions
+
+```powershell
+# 1. Generate synthetic data (deterministic, seed=42)
+python data/generate_synthetic.py
+
+# 2. Validate locally (43 checks)
+python data/validate_synthetic.py
+
+# 3. Execute Snowflake setup (requires ACCOUNTADMIN initially)
+#    Run in order via snowsql or CoCo:
+sql/00_setup/01_roles.sql
+sql/00_setup/02_database_warehouse.sql
+sql/00_setup/03_schemas.sql
+sql/07_security/01_grants.sql
+
+# 4. Create RAW tables and load data (requires C360_DATA_ENGINEER)
+sql/01_raw/01_raw_tables.sql
+sql/01_raw/02_stage_file_format.sql
+sql/01_raw/03_load_raw.sql
+
+# 5. Validate in Snowflake
+sql/01_raw/04_reconciliation.sql
+sql/08_tests/01_raw_data_quality.sql
+```
+
+## Validation Status
+
+| Layer | Checks | Result |
+|-------|--------|--------|
+| Local synthetic data | 43/43 | **PASS** |
+| Snowflake row counts | 8/8 tables match manifest | **PASS** |
+| FK referential integrity | 10/10 relationships valid | **PASS** |
+| Data-quality rules | 16/16 checks | **PASS** |
+| RBAC boundary tests | 8/8 role restrictions confirmed | **PASS** |
 
 ## Repository Structure
 
@@ -97,18 +169,25 @@ RAW Schema              ANALYTICS Schema              DECISION Schema
 customer360-next-best-action/
 ├── docs/
 │   ├── problem-and-impact.md      ← Business problem, personas, value hypothesis
-│   ├── solution-design.md         ← MVP scope, acceptance criteria, golden demo
-│   ├── ontology.md                ← Business concepts, relationships, decisions
-│   ├── data-model.md              ← Logical + physical model, layers, DQ rules
-│   ├── architecture.md            ← Simplified architecture, trust boundaries
-│   ├── security.md                ← RBAC, masking, AI safety, prompt injection
-│   └── coco-lifecycle-evidence.md ← Evidence matrix (30 tracked activities)
-├── sql/                           ← Schema DDL, pipelines, semantic model (planned)
+│   ├── solution-design.md         ← MVP scope, 15 acceptance criteria, golden demo
+│   ├── ontology.md                ← 16 business concepts, gap analysis, decisions
+│   ├── data-model.md              ← Logical + physical model, 15 DQ rules
+│   ├── architecture.md            ← 3-schema architecture, trust boundaries, fallback
+│   ├── security.md                ← 4 roles, masking, prompt-injection, 14 tests
+│   └── coco-lifecycle-evidence.md ← 34 tracked activities across 4 phases
+├── sql/
+│   ├── 00_setup/                  ← Roles, database, warehouse, schemas
+│   ├── 01_raw/                    ← Tables, stage, file format, load, reconciliation
+│   ├── 07_security/               ← Grants and revocations
+│   └── 08_tests/                  ← RAW data-quality test suite
+├── data/
+│   ├── generate_synthetic.py      ← Deterministic generator (seed=42)
+│   ├── validate_synthetic.py      ← 43-check local validation
+│   ├── generated/                 ← CSVs + manifest.json + validation report
+│   └── scenarios/                 ← Scenario catalog + generation specification
 ├── app/                           ← Streamlit app, NBA engine (planned)
-├── data/                          ← Synthetic data generator (planned)
-├── tests/                         ← Pipeline, RBAC, AI safety tests (planned)
 ├── skills/                        ← CoCo reusable skill (bonus)
-├── evidence/                      ← Screenshots, planning prompts
+├── evidence/                      ← Screenshots, development logs
 └── submission/                    ← Demo script, checklist
 ```
 
@@ -116,26 +195,35 @@ customer360-next-best-action/
 
 **Day 1 — Planning: COMPLETE**
 
-| Artifact | Content | Quality Gate |
-|----------|---------|-------------|
-| Problem & Impact | Single persona, single decision, no unsupported claims | Revised and verified |
-| Solution Design | 12 mandatory items, 12 acceptance criteria, explicit out-of-scope | Reviewed |
-| Ontology | 16 concepts, 8 gaps identified and resolved, decision log | Multi-perspective review |
-| Data Model | Conceptual → logical → physical, 13 modeling decisions explained | 5-question verification passed |
-| Architecture | Simplified for 6-day build, trust boundaries, fallback ladder | Critique applied |
-| Security | 4 roles, masking, prompt-injection defense, 14 Day-6 tests | Controls specified |
-| Evidence Matrix | 30 activities tracked across 4 phases | Planning phase populated |
+| Artifact | Quality Gate |
+|----------|-------------|
+| Problem & Impact | Single persona, single decision, no unsupported claims |
+| Solution Design | 12 mandatory items, 15 acceptance criteria |
+| Ontology | 16 concepts, 8 gaps resolved, multi-perspective review |
+| Data Model | 6 logical layers → 3 physical schemas, 15 DQ rules |
+| Architecture | Simplified for 6-day build, trust boundaries, fallback ladder |
+| Security | 4 roles, flat hierarchy, prompt-injection defense, 14 Day-6 tests |
+
+**Day 2 — Synthetic Data + Secure Foundation: COMPLETE**
+
+| Artifact | Quality Gate |
+|----------|-------------|
+| Scenario catalog | 12 scenarios (positive, negative, edge cases) |
+| Generator | Deterministic (seed=42), idempotent, 1,869 total rows |
+| Local validation | 43/43 checks pass including reproducibility |
+| Snowflake setup | DB + WH + 3 schemas + 4 roles + grants |
+| RAW load | 8 tables, SHA-256 row hashes, batch tracking |
+| Reconciliation | Row counts + FK integrity + golden demo verified |
+| RBAC tests | 8/8 boundary tests pass |
 
 ## Next Milestone
 
-**Development Phase — Synthetic Data + Schema + Enrichment Pipeline**
+**Day 3 — Enrichment Pipeline + Customer 360**
 
-1. Generate synthetic data (Python script, golden demo scenario seeded)
-2. Create RAW, ANALYTICS, DECISION schemas with all tables
-3. Load data into RAW
-4. Create INTERACTIONS_ENRICHED dynamic table (Cortex sentiment)
-5. Create CUSTOMER_360 dynamic table (pre-aggregated serving view)
-6. Validate pipeline end-to-end
+1. Create INTERACTIONS_ENRICHED dynamic table (Cortex SENTIMENT + topics)
+2. Create CUSTOMER_360 dynamic table (pre-aggregated serving view)
+3. Validate incremental refresh (insert → observe propagation)
+4. Measure observed end-to-end latency vs. TARGET_LAG objective
 
 ---
 
