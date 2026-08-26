@@ -686,5 +686,11 @@ Create docs/security.md containing:
 
 
 
-&#x20;Describe controls at planning level only; do not generate SQL yet. 
+&#x20;Describe controls at planning level only; do not generate SQL yet.
+
+
+
+\-- Prompt 7 - Document CoCo lifecycle evidence
+
+&#x20;
 

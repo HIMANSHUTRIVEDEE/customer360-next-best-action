@@ -29,7 +29,7 @@ This document tracks every phase of the project lifecycle, demonstrating that Co
 | Planning | Business ontology | "Create docs/ontology.md for the Customer 360 and Next Best Action solution..." | `docs/ontology.md` | Gap analysis (8 gaps identified and resolved); multi-perspective review (servicing, retention, underwriting, privacy, explainability, outcome measurement) | — | pending | Done |
 | Planning | Data model design | "Using docs/ontology.md, create docs/data-model.md..." | `docs/data-model.md` | Verified: interaction history preserved, recommendation traceable to evidence, outcomes usable for evaluation, AI values cannot overwrite source, incremental processing supported | — | pending | Done |
 | Planning | Architecture design and critique | "Create docs/architecture.md... Critique this architecture for excessive complexity..." | `docs/architecture.md` | Simplified from 6 schemas to 3, 4 pipeline stages to 2, SCD2 deferred; demo risks mitigated; trust boundaries explicit | — | pending | Done |
-| Planning | Security controls | "Create docs/security.md containing least-privilege roles, masking, prompt-injection defenses..." | `docs/security.md` | 14 security tests specified for Day 6; RBAC, masking, AI validation, consent, fallback controls defined | — | pending | Done |
+| Planning | Security controls | "Create docs/security.md containing least-privilege roles, masking, prompt-injection defenses..." | `docs/security.md` | 14 security tests specified for Day 6; RBAC, masking, AI validation, consent, fallback, DT privilege controls defined; owner-rights Streamlit model documented | — | pending | Done |
 | Planning | Lifecycle evidence matrix | "Update docs/coco-lifecycle-evidence.md..." | `docs/coco-lifecycle-evidence.md` (this file) | Matrix structure established; planning phase populated | — | pending | Done |
 
 ---
@@ -47,7 +47,7 @@ This document tracks every phase of the project lifecycle, demonstrating that Co
 | Development | Semantic model | Author Cortex Analyst YAML for Customer 360 domain | `sql/06_semantic_model.yaml` | `cortex reflect` passes without errors; verified questions return expected results | — | — | Planned |
 | Development | NBA engine logic | Implement deterministic risk scoring + action ranking in Python | `app/nba_engine.py` | Unit tests: golden demo input → expected action; edge cases produce sensible output | — | — | Planned |
 | Development | Streamlit application | Build 5-step decision-support UI | `app/streamlit_app.py` | App deploys via `snow streamlit deploy`; golden demo flow completes end-to-end | — | — | Planned |
-| Development | Decision logging | Implement DECISION_LOG writes on approval/modify/reject | `app/decision_logger.py` | Decision appears in DECISION_LOG with correct fields after rep action | — | — | Planned |
+| Development | Decision logging | Implement DECISION schema writes (RECOMMENDATION_LOG, DECISION_AUDIT_EVENT, FOLLOW_UP_LOG) on approval/modify/reject | `app/decision_logger.py` | Decision appears in correct DECISION tables with correct fields after rep action | — | — | Planned |
 
 ---
 
@@ -57,7 +57,8 @@ This document tracks every phase of the project lifecycle, demonstrating that Co
 |-------|----------|-------------|-------------------|-------------------|------------|------------|--------|
 | Execution | End-to-end pipeline run | Execute full pipeline: load → enrich → 360 → verify | Pipeline execution log | All dynamic tables healthy; 360 view populated; enrichment complete | — | — | Planned |
 | Execution | Golden demo walkthrough | Run the 5-step flow for Maria Chen | Demo recording / screenshots | All 5 steps complete; recommendation matches expected action; evidence displayed | — | — | Planned |
-| Execution | Incremental processing demo | Insert new interaction → verify 360 updates within 1 DT cycle | SQL insert + query verification | New interaction appears in 360 view after refresh | — | — | Planned |
+| Execution | Incremental processing demo | Insert new interaction → verify 360 updates within 1 DT cycle | SQL insert + query verification | New interaction appears in INTERACTIONS_ENRICHED (enriched) and CUSTOMER_360 (aggregates updated) | — | — | Planned |
+| Execution | Observed end-to-end latency measurement | Record T₁ (RAW insert) and T₂ (CUSTOMER_360 refresh) → compute T₂-T₁ | Latency log (timestamped test output) | Actual latency recorded and compared against TARGET_LAG = '1 minute' objective | — | — | Planned |
 | Execution | Fallback demonstration | Disable enrichment → verify graceful degradation | UI screenshot showing fallback state | Structured 360 renders; "AI unavailable" banner shown; no recommendation panel | — | — | Planned |
 | Execution | Streamlit deployment | Deploy to Snowflake via CoCo | Deployed Streamlit app object | `SHOW STREAMLITS` returns app; accessible via URL | — | — | Planned |
 
@@ -74,6 +75,9 @@ This document tracks every phase of the project lifecycle, demonstrating that Co
 | Testing | Fallback behavior test | Verify app degrades gracefully when enrichment unavailable | `tests/test_fallback.sql` | Structured 360 renders; no recommendation when confidence = Low | — | — | Planned |
 | Testing | Secrets hygiene test | Verify no credentials in repository | `tests/test_secrets.sh` | `git grep` returns no matches for secret patterns | — | — | Planned |
 | Testing | Reproducibility test | Run full setup from clean account | Setup script execution log | All scripts execute idempotently; app accessible after fresh deploy | — | — | Planned |
+| Testing | Idempotency / deduplication test | Insert same interaction_id twice → verify no duplicate enrichment or inflated 360 counts | `tests/test_idempotency.sql` | Row count in INTERACTIONS_ENRICHED unchanged; CUSTOMER_360 aggregates stable | — | — | Planned |
+| Testing | Dynamic table monitoring test | Verify refresh failures are visible and queryable | `tests/test_dt_monitoring.sql` | SHOW DYNAMIC TABLES returns FAILED status after simulated error; INFORMATION_SCHEMA shows failure detail | — | — | Planned |
+| Testing | Freshness breach detection test | Verify freshness can be measured against TARGET_LAG objective | `tests/test_freshness.sql` | Query returns seconds-since-last-refresh; value comparable to 60-second objective | — | — | Planned |
 
 ---
 
@@ -83,10 +87,10 @@ This document tracks every phase of the project lifecycle, demonstrating that Co
 |-------|-----------------|------|-------------|---------|
 | Planning | 8 | 8 | 0 | 0 |
 | Development | 10 | 0 | 0 | 10 |
-| Execution | 5 | 0 | 0 | 5 |
-| Testing | 7 | 0 | 0 | 7 |
-| **Total** | **30** | **8** | **0** | **22** |
+| Execution | 6 | 0 | 0 | 6 |
+| Testing | 10 | 0 | 0 | 10 |
+| **Total** | **34** | **8** | **0** | **26** |
 
 ---
 
-*Document version: v1 — Planning phase populated. Development, Execution, and Testing phases to be updated as work proceeds.*
+*Document version: v1.2 — Updated DECISION_LOG references to 5-table structure. Security evidence description updated. Total tracked: 34.*

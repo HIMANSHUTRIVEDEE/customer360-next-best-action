@@ -96,7 +96,9 @@
 │                                                              ▼                  │
 │  ┌──────────────────────────────────────────────┐                               │
 │  │  DECISION SCHEMA                             │  ← Tier 3: Append-only        │
-│  │  • DECISION_LOG (all events)                 │                               │
+│  │  • RECOMMENDATION_LOG (immutable)            │                               │
+│  │  • DECISION_AUDIT_EVENT (all state changes)  │                               │
+│  │  • FOLLOW_UP_LOG (committed actions)         │                               │
 │  │  • ACTION_OUTCOME (async, days later)        │                               │
 │  └──────────────────────────────────────────────┘                               │
 │                                                                                 │
@@ -105,23 +107,36 @@
 
 ---
 
-## 3. Incremental Real-Time Workflow
+## 3. Incremental Near-Real-Time Workflow
+
+### Design Decisions
+
+1. **Incremental dynamic tables** are the pipeline mechanism. They process only new or changed records on each refresh cycle.
+2. **Intermediate dynamic tables** (INTERACTIONS_ENRICHED) use `TARGET_LAG = DOWNSTREAM`, meaning they refresh only when their downstream consumer (CUSTOMER_360) needs fresh data.
+3. **The terminal dynamic table** (CUSTOMER_360) uses `TARGET_LAG = '1 minute'` for the hackathon demonstration.
+4. **TARGET_LAG is a freshness objective, not a guaranteed refresh interval.** Snowflake schedules refreshes to meet the target but actual latency depends on warehouse availability, query complexity, and system load. Actual observed latency is measured separately during testing.
+5. **Only new or changed records are processed** where supported by the DT incremental refresh semantics. Whether Snowflake uses incremental or full refresh for a given DT query is determined by the optimizer; actual refresh mode will be verified after deployment via INFORMATION_SCHEMA.DYNAMIC_TABLE_REFRESH_HISTORY (refresh_trigger column).
+6. **Duplicate prevention** uses source-event identifiers (interaction_id, transcript_id) and row hashes. If a record with the same source_event_id already exists in the target, it is not reprocessed.
+7. **Monitoring** for refresh failures and freshness breaches is visible via `SHOW DYNAMIC TABLES` (status, data_timestamp columns) and INFORMATION_SCHEMA.DYNAMIC_TABLE_REFRESH_HISTORY.
 
 ### How New Data Propagates
 
 ```
-New interaction inserted into RAW.TRANSCRIPTS
+New interaction + transcript inserted into RAW
     │
-    ▼ [Dynamic Table refresh — TARGET_LAG = 1 minute for demo]
+    ▼ [Dynamic Table refresh — TARGET_LAG = DOWNSTREAM]
 ANALYTICS.INTERACTIONS_ENRICHED picks up new row
-    Cortex SENTIMENT() produces score + label
-    Cortex COMPLETE() extracts topics (fixed category set)
+    • Dedup check: skip if interaction_id already present
+    • Cortex SENTIMENT() produces score + label
+    • Cortex COMPLETE() extracts topics (fixed category set)
+    • _source_event_id, _ingested_at, _processed_at recorded
     │
-    ▼ [Dynamic Table refresh — TARGET_LAG = 1 minute for demo]
+    ▼ [Dynamic Table refresh — TARGET_LAG = '1 minute']
 ANALYTICS.CUSTOMER_360 recalculates affected customer's aggregates:
-    negative_interaction_count_90d increments
-    avg_sentiment_90d recalculates
-    sentiment_direction may shift
+    • negative_interaction_count_90d increments
+    • avg_sentiment_90d recalculates
+    • sentiment_direction may shift
+    • _processed_at records when this refresh occurred
     │
     ▼ [Next time rep searches this customer]
 Updated 360 is served. New signals computed. NBA may change.
@@ -131,10 +146,41 @@ Updated 360 is served. New signals computed. NBA may change.
 
 | Object | Type | Upstream | TARGET_LAG | Purpose |
 |--------|------|----------|------------|---------|
-| ANALYTICS.INTERACTIONS_ENRICHED | Dynamic Table | RAW.INTERACTIONS + RAW.TRANSCRIPTS | 1 minute | Apply Cortex enrichment |
-| ANALYTICS.CUSTOMER_360 | Dynamic Table | RAW.* + ANALYTICS.INTERACTIONS_ENRICHED | 1 minute | Pre-aggregate 360 view |
+| ANALYTICS.INTERACTIONS_ENRICHED | Dynamic Table | RAW.INTERACTIONS + RAW.TRANSCRIPTS | DOWNSTREAM | Apply Cortex enrichment to new transcripts only |
+| ANALYTICS.CUSTOMER_360 | Dynamic Table | RAW.* + ANALYTICS.INTERACTIONS_ENRICHED | 1 minute | Pre-aggregate 360 view; terminal freshness objective |
 
-**Design decision:** TARGET_LAG is 1 minute for the demo (to show incremental refresh live). Production would use 15 minutes to reduce compute cost. Only two dynamic tables — minimal pipeline surface.
+### Deduplication Strategy
+
+| Layer | Dedup Key | Mechanism |
+|-------|-----------|-----------|
+| INTERACTIONS_ENRICHED | interaction_id (from RAW.INTERACTIONS) | DT query uses interaction_id as the join/identity key. Same ID → same row, not a new row. |
+| CUSTOMER_360 | customer_id | Aggregation by customer_id is inherently idempotent — re-aggregating the same source rows produces the same result. |
+
+### Monitoring and Failure Visibility
+
+| Check | Query | What It Shows |
+|-------|-------|---------------|
+| DT health status | `SHOW DYNAMIC TABLES IN SCHEMA ANALYTICS` | Status (ACTIVE, SUSPENDED, FAILED), last refresh time |
+| Freshness breach | `SELECT TIMESTAMPDIFF('second', DATA_TIMESTAMP, CURRENT_TIMESTAMP()) FROM TABLE(INFORMATION_SCHEMA.DYNAMIC_TABLE_REFRESH_HISTORY(...))` | Seconds since last successful refresh vs. TARGET_LAG |
+| Refresh failure detail | `INFORMATION_SCHEMA.DYNAMIC_TABLE_REFRESH_HISTORY` | Error messages, failure timestamps |
+| Enrichment failure rate | `SELECT COUNT(*) FROM INTERACTIONS_ENRICHED WHERE enrichment_status = 'failed'` | How many transcripts failed AI processing |
+
+### Observed Latency Measurement
+
+During testing, actual end-to-end latency is measured by:
+1. Recording the timestamp of INSERT into RAW (T₁)
+2. Querying CUSTOMER_360 until the new data appears (T₂)
+3. Recording T₂ - T₁ as the observed latency
+
+This value is logged in test output and compared against the TARGET_LAG = '1 minute' objective. The objective may not be met on every refresh; the measurement documents actual system behavior.
+
+### Incremental Demo Scenario (AC11)
+
+Insert one new interaction for the golden demo customer (Maria Chen) and observe:
+1. **Enrichment change:** INTERACTIONS_ENRICHED gains one new row with sentiment + topics
+2. **360 change:** CUSTOMER_360 shows updated negative_interaction_count_90d and sentiment_direction
+3. **Signal change:** Risk signal computation (in application) produces a higher risk score
+4. **NBA change (if applicable):** Recommendation confidence or alternative ranking may shift
 
 ### Why Not Streams + Tasks?
 
@@ -180,7 +226,9 @@ graph TB
     end
 
     subgraph "DECISION Schema"
-        DLOG[DECISION_LOG<br/>Append-only]
+        RLOG[RECOMMENDATION_LOG<br/>Append-only]
+        AUDIT[DECISION_AUDIT_EVENT]
+        FLOG[FOLLOW_UP_LOG]
         OUTCOME[ACTION_OUTCOME<br/>Async]
     end
 
@@ -208,8 +256,10 @@ graph TB
     SEM -.->|Natural language queries| APP
 
     APP --> GATE
-    GATE -->|Decision logged| DLOG
-    DLOG -.->|Async outcome| OUTCOME
+    GATE -->|Recommendation logged| RLOG
+    GATE -->|Decision event| AUDIT
+    GATE -->|If approved/modified| FLOG
+    FLOG -.->|Async outcome| OUTCOME
 ```
 
 ---
@@ -242,13 +292,18 @@ graph TB
 
 | Component | Failure Mode | Detection | Fallback Behavior | User Impact |
 |-----------|-------------|-----------|-------------------|-------------|
-| **Cortex SENTIMENT()** | Function unavailable or returns error | enrichment_status = 'failed' in DT | 360 view renders without sentiment. No NBA generated. Banner: "AI insights unavailable." | Rep sees structured data only; must make unassisted decision |
-| **Cortex COMPLETE() (topics)** | Inconsistent or empty output | Empty extracted_topics array | Topics not displayed. Sentiment still used if available. | Minor — topics are informational only |
+| **Cortex SENTIMENT()** | Function unavailable or returns error | enrichment_status = 'failed' in DT | 360 view renders without sentiment. NBA withheld (required signal missing). Banner: "AI insights unavailable — recommendation withheld." | Rep sees structured data only; must make unassisted decision |
+| **Cortex COMPLETE() (topics)** | Inconsistent or empty output | Empty extracted_topics array | Topics not displayed. Sentiment still used if available. NBA not affected (topics are optional). | Minor — topics are informational only |
 | **Dynamic Table refresh** | Warehouse suspended or DT in error state | SHOW DYNAMIC TABLES status check | App queries base tables directly (slower but functional) | Slight latency increase; data may be stale by minutes |
 | **CUSTOMER_360 returns no row** | Customer not in synthetic data | NULL check in application | "Customer not found" message | Expected for non-seeded customers |
-| **NBA engine receives incomplete signals** | Missing enrichment or missing payment data | Data completeness check in signal computation | Confidence downgraded to "Low". Evidence states what's missing. Recommendation still generated if ≥1 signal exists. | Rep sees lower confidence + explanation of gap |
+| **NBA engine receives incomplete optional signals** | Missing payment data or claims data (not sentiment) | Data completeness check in signal computation | Confidence downgraded. Evidence panel discloses: "Payment data unavailable — confidence reduced." NBA still generated with available signals. | Rep sees lower confidence + explicit disclosure of what's missing |
 | **Streamlit session timeout** | Idle session exceeds Snowflake limit | Streamlit error handler | Session state persisted in st.session_state; re-auth is transparent | Brief interruption; no data loss |
-| **DECISION_LOG write fails** | Permission error or schema issue | Try/except in application | Error displayed to rep. Decision not lost — retry button offered. | Rep must retry approval action |
+| **DECISION schema write fails** | Permission error or schema issue | Try/except in application | Error displayed to rep. Decision not lost — retry button offered. | Rep must retry approval action |
+
+### Standardized Fallback Rule
+
+- **Missing required signal (recent sentiment for customer with interactions in window):** NBA is withheld entirely. Structured 360 displayed. Rationale: recommending without the primary signal risks unsafe action.
+- **Missing optional signal (payment, claims, or coverage data):** NBA is generated with reduced confidence. The evidence panel explicitly names the missing source. Rationale: partial information is better than no guidance, provided the gap is disclosed.
 
 ### Graceful Degradation Ladder
 
@@ -403,29 +458,63 @@ The system does NOT send emails, make calls, or trigger external systems. "Execu
 
 1. Rep reviews recommendation and evidence
 2. Rep clicks Accept (or Modify + notes, or Reject + reason)
-3. Application writes to DECISION.DECISION_LOG:
-   - recommendation details
-   - rep's decision (approved/modified/rejected)
-   - evidence snapshot (signal values at decision time)
-   - rep identity + timestamp
+3. Application writes to the DECISION schema:
+   - RECOMMENDATION_LOG: the recommendation itself (immutable, written when presented)
+   - CONTEXT_SNAPSHOT: the frozen 360 state at recommendation time (deferred to production; TIME TRAVEL used in MVP)
+   - DECISION_AUDIT_EVENT: the rep's decision event (presented, approved, modified, rejected)
+   - FOLLOW_UP_LOG: if approved or modified, the committed action record
 4. Confirmation displayed to rep
 5. Rep then executes the action manually through existing operational channels
+6. ACTION_OUTCOME: recorded asynchronously (days later) when renewal/lapse is observed
 
-### DECISION_LOG Schema
+### DECISION Schema Tables
+
+| Table | Purpose | Written When |
+|-------|---------|-------------|
+| RECOMMENDATION_LOG | Immutable record of what the system suggested | When recommendation is generated and presented |
+| CONTEXT_SNAPSHOT | Frozen 360 state for audit replay | With recommendation (deferred — use TIME TRAVEL in MVP) |
+| DECISION_AUDIT_EVENT | All decision touchpoints: presented, approved, modified, rejected, timeout | On each state transition |
+| FOLLOW_UP_LOG | Committed action (only for approved/modified) | When rep clicks Accept or Modify |
+| ACTION_OUTCOME | Eventual result: renewed, lapsed, escalated, no_change | Asynchronously, days/weeks later |
+
+### RECOMMENDATION_LOG Columns
 
 | Column | Type | Description |
 |--------|------|-------------|
-| decision_id | UUID | Primary key |
-| customer_id | STRING | Who the decision is about |
-| recommendation_action | STRING | What the system suggested |
-| recommendation_evidence | VARIANT | Signal list + source references |
-| recommendation_confidence | STRING | Evidence completeness level |
-| decision_type | STRING | approved / modified / rejected |
-| action_taken | STRING | What the rep actually decided (= recommendation if approved) |
-| modification_notes | STRING | Rep's notes if modified; rejection reason if rejected |
-| representative_id | STRING | Who made the decision |
-| decided_at | TIMESTAMP_NTZ | When |
+| recommendation_id | UUID | Primary key |
+| customer_id | STRING | Who the recommendation is about |
+| generated_at | TIMESTAMP_NTZ | When the system produced this |
+| action_type | STRING | Recommended action type |
+| action_description | STRING | Full action text shown to rep |
+| confidence_level | STRING | high / medium_high / medium / low |
+| confidence_score | NUMBER(3,2) | Numeric (0.00–1.00) |
+| alternatives | VARIANT | Array of alternative actions |
+| evidence_payload | VARIANT | Signals, source refs, completeness |
+| eligibility_rules_evaluated | VARIANT | Which rules were checked |
 | session_id | STRING | Application session |
+
+### FOLLOW_UP_LOG Columns
+
+| Column | Type | Description |
+|--------|------|-------------|
+| follow_up_id | UUID | Primary key |
+| recommendation_id | UUID | FK → RECOMMENDATION_LOG |
+| representative_id | STRING | Who approved (service_rep in MVP) |
+| decision | STRING | approved / modified |
+| action_taken | STRING | Actual action (= recommendation if approved) |
+| modification_notes | STRING | Why modified (null if approved as-is) |
+| decided_at | TIMESTAMP_NTZ | When |
+
+### DECISION_AUDIT_EVENT Columns
+
+| Column | Type | Description |
+|--------|------|-------------|
+| event_id | UUID | Primary key |
+| recommendation_id | UUID | FK → RECOMMENDATION_LOG |
+| event_type | STRING | presented / approved / modified / rejected / timeout |
+| representative_id | STRING | Who was presented the recommendation |
+| event_timestamp | TIMESTAMP_NTZ | When |
+| metadata | VARIANT | Rejection reason, modification text, timeout duration |
 
 ---
 
@@ -556,4 +645,4 @@ Before running the setup scripts, validate:
 
 ---
 
-*Document version: v1 — Simplified architecture optimized for 6-day build. Enterprise patterns documented as production deferrals. Subject to revision during implementation.*
+*Document version: v1.2 — Consistency correction: standardized fallback rule (required vs optional signals), replaced single DECISION_LOG with 5-table DECISION schema, added incremental-refresh verification caveat. Freshness objective remains 1 minute (prototype) / 15 minutes (production).*

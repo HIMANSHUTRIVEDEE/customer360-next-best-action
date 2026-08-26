@@ -149,6 +149,7 @@ These personas will be revisited once the core decision-support pattern is valid
 - This is a decision-support application, not a dashboard. It presents a recommendation and waits for human approval.
 - Every recommendation is accompanied by evidence (not a black box)
 - The human always decides. No action is taken without explicit rep consent.
+- Near-real-time incremental refresh: new interactions flow through enrichment and into the 360 view via dynamic tables with a one-minute freshness objective, so the rep sees current context without manual refresh.
 - Graceful fallback: if AI-derived signals are unavailable, the system still presents available structured context without a recommendation
 - Outcome tracking: every accepted/rejected/modified action is logged for future learning
 
@@ -174,6 +175,7 @@ These personas will be revisited once the core decision-support pattern is valid
 | Data source completeness | All synthetic sources included in 360 assembly | Prototype target | Field population check against synthetic schema |
 | Evidence attachment rate | Every NBA recommendation includes at least one contributing signal | Prototype target | Audit log inspection |
 | Pipeline freshness | New synthetic interaction reflected in 360 within pipeline cycle | Prototype target | End-to-end latency test with inserted record |
+| Observed end-to-end latency | Record actual time from RAW insert to CUSTOMER_360 refresh completion | Prototype target | Timestamp comparison: insert time vs. DT refresh completion time (TARGET_LAG = '1 minute' is a freshness objective, not a guaranteed interval) |
 | Fallback behavior | System renders structured context when AI extraction is disabled | Prototype target | Simulated Cortex unavailability test |
 
 ### Synthetic Scenario Assumptions (parameters used in demo data)
@@ -282,4 +284,4 @@ The architecture uses domain-agnostic patterns that translate to lending (mortga
 
 ---
 
-_Document version: v2.1. Revised for MVP focus, single-persona scope, removal of unsupported claims, and clarification of synthetic assumptions. Subject to architecture review._
+_Document version: v2.2. Added near-real-time design principle and observed-latency metric. No changes to problem, persona, golden demo, or impact claims._

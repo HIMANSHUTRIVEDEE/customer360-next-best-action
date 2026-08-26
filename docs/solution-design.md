@@ -172,14 +172,37 @@ All items below must be complete and demonstrable by 30 August.
 | Outcome recording | After action, log the decision |
 | Fallback state | If AI enrichment is unavailable, the app still renders structured data with a "Recommendations unavailable" notice |
 
-### 10. Automation
+### 10. Automation and Near-Real-Time Incremental Flow
 
 | Deliverable | Detail |
 |-------------|--------|
-| Pipeline orchestration | Snowflake tasks or dynamic tables that keep the 360 view and enrichments current |
-| Incremental processing | New data flows through without manual trigger |
-| Monitoring | Task history queryable; failures visible |
+| Pipeline orchestration | Incremental dynamic tables keep the 360 view and enrichments current |
+| Incremental processing | Only new or changed records are processed; no full recomputation on each refresh cycle |
+| TARGET_LAG configuration | Intermediate DTs (INTERACTIONS_ENRICHED) use TARGET_LAG = DOWNSTREAM. Terminal DT (CUSTOMER_360) uses TARGET_LAG = '1 minute'. TARGET_LAG is a freshness objective, not a guaranteed refresh interval. |
+| Deduplication | Source-event identifiers (`interaction_id`, `transcript_id`) and row hashes prevent duplicate processing when the same record is encountered more than once |
+| Idempotency | Re-running the pipeline with the same source data produces identical results without creating duplicate rows |
+| Monitoring | Dynamic table refresh status and freshness visible via SHOW DYNAMIC TABLES and INFORMATION_SCHEMA. Refresh failures and freshness breaches are queryable. |
+| Observed latency | Actual end-to-end latency (RAW insert → CUSTOMER_360 refresh) is measured and recorded during testing — not assumed from TARGET_LAG |
 | Reproducible setup | All automation created via SQL scripts in the repo |
+
+#### Required Near-Real-Time Flow (demonstrable)
+
+```
+New interaction or transcript inserted into RAW
+  → INTERACTIONS_ENRICHED refreshes (TARGET_LAG = DOWNSTREAM)
+    → Cortex SENTIMENT + topic extraction applied to new record only
+  → CUSTOMER_360 refreshes (TARGET_LAG = '1 minute')
+    → Affected customer's aggregates recalculated
+  → Next application query returns updated risk signals and NBA
+```
+
+#### Incremental Demo Scenario
+
+Insert one new interaction for the golden demo customer (Maria Chen) and demonstrate:
+1. INTERACTIONS_ENRICHED gains one new enriched row (sentiment + topics)
+2. CUSTOMER_360 reflects updated `negative_interaction_count_90d` and `sentiment_direction`
+3. Risk signals recalculate with the new data point
+4. NBA recommendation may change (or confidence level adjusts) based on the additional signal
 
 ### 11. RBAC and Auditability
 
@@ -253,9 +276,12 @@ The prototype is considered complete when all of the following are true:
 | AC8 | Semantic model passes `cortex reflect` validation | CLI output |
 | AC9 | Auditor role can query decision log; service rep role cannot modify pipeline tables | RBAC test queries |
 | AC10 | All setup scripts run idempotently from a clean Snowflake account | Fresh-account deployment test |
-| AC11 | Pipeline processes a newly inserted interaction and reflects it in the 360 view within one task cycle | Insert + wait + verify |
+| AC11 | Pipeline processes a newly inserted interaction through enrichment and into CUSTOMER_360 within the TARGET_LAG freshness objective | Insert into RAW → verify row in INTERACTIONS_ENRICHED → verify CUSTOMER_360 aggregates updated |
 | AC12 | Repository README documents setup steps sufficient for a reviewer to deploy independently | Reviewer walkthrough |
+| AC13 | Observed end-to-end latency (RAW insert to CUSTOMER_360 refresh) is recorded; TARGET_LAG = '1 minute' is stated as a freshness objective, not a guaranteed interval | Timestamp comparison logged in test output |
+| AC14 | Duplicate interaction insert does not produce duplicate enrichment or inflate 360 aggregates | Insert same interaction_id twice → assert row count unchanged in INTERACTIONS_ENRICHED |
+| AC15 | Dynamic table refresh failures are visible via SHOW DYNAMIC TABLES or INFORMATION_SCHEMA query | Simulate failure (e.g., invalid Cortex input) → verify error status queryable |
 
 ---
 
-_Document version: v1.1. Golden demo standardized as Select customer → Understand context → Explain risk → Recommend action → Approve/create follow-up. Subject to architecture review._
+_Document version: v1.2. Added near-real-time incremental flow section, TARGET_LAG design decisions, deduplication requirements, and AC13-AC15 for latency/idempotency/monitoring._

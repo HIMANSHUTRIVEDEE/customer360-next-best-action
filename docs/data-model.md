@@ -262,7 +262,7 @@ The logical model specifies entities, attributes, data types (platform-independe
 |-----------|------|----------|-------------|
 | representative_id | identifier | No | Business key — employee ID |
 | name | string(200) | No | Display name |
-| role | enum(service_rep, retention_specialist, supervisor) | No | Role classification |
+| role | enum(service_rep, retention_specialist, supervisor) | No | Role classification. MVP exercises service_rep only; other values exist for future-scope personas. |
 | team | string(100) | Yes | Team assignment |
 | active | boolean | No | Employment status |
 
@@ -347,17 +347,25 @@ The logical model specifies entities, attributes, data types (platform-independe
 
 ### 3.1 Database and Schema Layout
 
+**Logical layers (six):**
 ```
-CUSTOMER360_DB
-├── RAW                    -- Landing zone: ingested as-is from source
-├── CURATED                -- Cleaned, typed, deduplicated, referentially intact
-├── AI_ENRICHED            -- Cortex-processed: sentiment, topics, key phrases
-├── SERVING                -- 360 views, risk computations, NBA-ready structures
-├── DECISION               -- Recommendations, follow-ups, outcomes, audit
-└── CONFIG                 -- Eligibility rules, signal weights, action library
+1. RAW                    -- Landing zone: ingested as-is from source
+2. CURATED                -- Cleaned, typed, deduplicated, referentially intact
+3. AI_ENRICHED            -- Cortex-processed: sentiment, topics, key phrases
+4. SERVING                -- 360 views, risk computations, NBA-ready structures
+5. DECISION               -- Recommendations, follow-ups, outcomes, audit
+6. CONFIG                 -- Eligibility rules, signal weights, action library
 ```
 
-**Modeling decision:** Six schemas separate concerns by processing stage and access tier. This aligns with the ontology's access tiers: RAW/CURATED = Tier 4 (DataEngineer), AI_ENRICHED = Tier 1/2 (derived signals + transcripts), SERVING = Tier 1 (rep-facing), DECISION = Tier 3 (audit). CONFIG holds reference data (Tier 4).
+**MVP physical schemas (three):**
+```
+CUSTOMER360_DB
+├── RAW                    -- Layers 1 (landing zone)
+├── ANALYTICS              -- Layers 2–4 + 6 collapsed (curated, enriched, serving, config)
+└── DECISION               -- Layer 5 (immutable audit)
+```
+
+**Reconciliation:** The six logical layers describe data maturity stages and access tiers. For the MVP prototype, layers 2–4 and 6 are implemented within a single ANALYTICS schema to reduce grant surface and operational complexity (see `docs/architecture.md` §3). The logical separation is preserved conceptually; physical schema separation is a production enhancement documented in architecture.md §14.
 
 ### 3.2 Physical Table Mapping
 
@@ -605,12 +613,12 @@ The `SERVING.CUSTOMER_360_VIEW` is the primary object consumed by the Streamlit 
 
 ```
 SERVING.CUSTOMER_360_VIEW
-  TARGET_LAG = '15 minutes'
+  TARGET_LAG = '1 minute'
   WAREHOUSE = CUSTOMER360_WH
   AS SELECT ...
 ```
 
-**Modeling decision:** The 360 view is a wide, pre-aggregated dynamic table rather than a runtime multi-join query because: (a) the aggregations (counts, averages, window comparisons) are compute-intensive, (b) the Streamlit app needs sub-5-second response, (c) dynamic table incremental refresh handles new data without full recomputation. The trade-off is a 15-minute staleness window, which is acceptable per the MVP latency requirement.
+**Modeling decision:** The 360 view is a wide, pre-aggregated dynamic table rather than a runtime multi-join query because: (a) the aggregations (counts, averages, window comparisons) are compute-intensive, (b) the Streamlit app needs sub-5-second response, (c) dynamic table incremental refresh handles new data without full recomputation. TARGET_LAG = '1 minute' is the prototype freshness objective (not a guaranteed interval). Production would increase to 15 minutes to reduce compute cost.
 
 ---
 
@@ -714,6 +722,9 @@ DECISION tables (written by Streamlit app on user action)
 | DQ10 | At least one coverage row exists for every active policy | CURATED | Referential completeness check | Soft — warning |
 | DQ11 | payment.amount > 0 | CURATED | Range check | Hard — reject row |
 | DQ12 | Customer valid_from < valid_to for all non-current SCD2 rows | CURATED | Temporal integrity check | Hard — reject row |
+| DQ13 | No duplicate `_source_event_id` within INTERACTIONS_ENRICHED | AI_ENRICHED | Unique constraint on source_event_id | Hard — skip duplicate |
+| DQ14 | `_processed_at` is after `_ingested_at` for every row | All layers | Temporal ordering check | Soft — flag for investigation |
+| DQ15 | CUSTOMER_360 refresh timestamp is within TARGET_LAG objective of upstream changes | SERVING | Compare DT DATA_TIMESTAMP to MAX(_ingested_at) in upstream | Soft — freshness breach alert (not a hard failure — TARGET_LAG is a freshness objective, not a guarantee) |
 
 **Enforcement approach:** Hard rules block downstream processing (the record is quarantined or rejected). Soft rules log warnings but allow the record through. In MVP with synthetic data, all rules should pass by construction — the rules document *intent* for production robustness.
 
@@ -726,9 +737,12 @@ Every table in CURATED, AI_ENRICHED, SERVING, and DECISION schemas carries stand
 | Column | Type | Purpose |
 |--------|------|---------|
 | `_loaded_at` | TIMESTAMP_NTZ | When this row was written to this table |
-| `_source_table` | STRING | Which RAW or upstream table produced this row |
+| `_source_event_id` | STRING | The originating record's natural identifier (e.g., interaction_id, transcript_id). Used for deduplication: if this value already exists in the target, the row is not reprocessed. |
+| `_ingested_at` | TIMESTAMP_NTZ | When the source record first arrived in RAW (preserves original ingestion time across downstream hops) |
+| `_processed_at` | TIMESTAMP_NTZ | When this specific pipeline stage processed the record (differs from _loaded_at for dynamic tables where the DT refresh time is the processing time) |
 | `_pipeline_run_id` | STRING | Identifier of the task/DT refresh that produced this row |
-| `_row_hash` | STRING | SHA-256 hash of business columns (for change detection) |
+| `_row_hash` | STRING | SHA-256 hash of business columns. Used for incremental change detection: a record is reprocessed only if its hash differs from the previously stored hash for the same source_event_id. |
+| `_source_table` | STRING | Which RAW or upstream table produced this row |
 
 ### Additional columns by schema
 
@@ -764,11 +778,11 @@ Every table in CURATED, AI_ENRICHED, SERVING, and DECISION schemas carries stand
 | M7 | ContextSnapshot stored as JSON blob | Purpose is audit replay of exact state; normalizing serves no query need |
 | M8 | UUIDs for Decision-domain PKs | Concurrent write safety without coordination; append-only audit records |
 | M9 | Rejections in DECISION_AUDIT_EVENT, not FOLLOW_UP_LOG | Follow-Up = committed action; audit event = all touchpoints including non-actions |
-| M10 | Dynamic table for CUSTOMER_360_VIEW | Pre-aggregation for sub-5s response; 15-min lag acceptable per MVP requirement |
+| M10 | Dynamic table for CUSTOMER_360_VIEW | Pre-aggregation for sub-5s response; 1-minute freshness objective for prototype; 15-min as production cost optimization |
 | M11 | SCD2 only for Customer and Policy | Only these have history-bearing state transitions relevant to the NBA decision |
 | M12 | FKs declared but not enforced | Snowflake pattern; integrity enforced at pipeline level via DQ rules |
-| M13 | Six schemas by processing stage | Aligns with access tiers; enables granular RBAC; clear pipeline flow |
+| M13 | Six logical layers, three MVP physical schemas | Logical separation documents access tiers and data maturity; physical collapse to RAW/ANALYTICS/DECISION reduces grant surface for prototype |
 
 ---
 
-*Document version: v1 — Data model design. DDL generation deferred to implementation phase. Subject to revision based on semantic model and application requirements.*
+*Document version: v1.2 — Consistency correction: reconciled 6 logical layers with 3 physical schemas, aligned TARGET_LAG to 1 minute (prototype), clarified service_rep as only MVP role, updated M10 and M13.*
