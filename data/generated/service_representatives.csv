@@ -1,0 +1,6 @@
+representative_id,name,role,active,team
+REP-001,Sarah Mitchell,service_rep,TRUE,Team Alpha
+REP-002,David Park,service_rep,TRUE,Team Alpha
+REP-003,Lisa Kumar,service_rep,TRUE,Team Beta
+REP-004,Robert Chen,retention_specialist,TRUE,Retention
+REP-005,Angela Torres,supervisor,FALSE,

@@ -1,0 +1,34 @@
+scenario_id,customer_id,signal_name,expected_value,test_note
+SCN-001,CUST-001,renewal_proximity,high,Auto policy expires in 16 days (within 30-day window)
+SCN-001,CUST-001,negative_sentiment_count_90d,2,Two negative interactions within 90-day window
+SCN-001,CUST-001,sentiment_direction,worsening,Current window worse than prior window
+SCN-001,CUST-001,payment_behavior,good,All payments on-time
+SCN-001,CUST-001,multi_policy_flag,true,2 active policies
+SCN-002,CUST-002,renewal_proximity,high,Auto expires in 22 days
+SCN-002,CUST-002,negative_sentiment_count_90d,2,Two negative interactions in 90 days
+SCN-002,CUST-002,payment_behavior,minor_risk,1 historical late payment
+SCN-003,CUST-003,renewal_proximity,high,Auto expires in 12 days
+SCN-003,CUST-003,negative_sentiment_count_90d,0,All positive interactions
+SCN-003,CUST-003,multi_policy_flag,true,2 active policies
+SCN-004,CUST-004,renewal_proximity,low,130 days out
+SCN-004,CUST-004,negative_sentiment_count_90d,3,3 negative interactions in 60 days
+SCN-005,CUST-005,renewal_proximity,high,Home expires in 20 days
+SCN-005,CUST-005,negative_sentiment_count_90d,0,No interactions in 90-day window
+SCN-005,CUST-005,sentiment_direction,not_computable,No current-window data
+SCN-006,CUST-006,negative_sentiment_count_90d,1,Only Interaction A has enrichable transcript
+SCN-006,CUST-006,interaction_without_transcript,INT-000015,Interaction B has no transcript row
+SCN-007,CUST-007,consent_blocked_transcript,TRX-000016,Transcript 1 has consent=FALSE
+SCN-007,CUST-007,negative_sentiment_count_90d,1,Only consented transcript contributes
+SCN-008,CUST-008,payment_behavior,poor,3 late + 1 grace period
+SCN-008,CUST-008,renewal_proximity,low,45 days out
+SCN-009,CUST-009,open_complaints,1,Unresolved complaint 15 days ago
+SCN-009,CUST-009,renewal_proximity,high,Home expires in 22 days
+SCN-010,CUST-010,multi_policy_flag,false,Single renters policy
+SCN-010,CUST-010,renewal_proximity,low,60 days out
+SCN-011,CUST-011,multi_policy_flag,true,3 policies for CUST-011
+SCN-011,CUST-011,household_policy_count,4,4 policies across household HH-011
+SCN-011,CUST-011,renewal_proximity,high,Auto expires in 28 days
+SCN-012,CUST-012,renewal_proximity,very_high,Auto expires in 12 days
+SCN-012,CUST-012,negative_sentiment_count_90d,0,Recent interactions are positive
+SCN-012,CUST-012,payment_behavior,poor,2 late payments in 6 months
+SCN-012,CUST-012,sentiment_direction,improving,"Prior window negative, current positive"

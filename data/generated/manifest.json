@@ -1,0 +1,52 @@
+{
+  "seed": 42,
+  "generation_date": "2026-08-26",
+  "generator_version": "1.0.0",
+  "files": [
+    {
+      "filename": "service_representatives.csv",
+      "row_count": 5,
+      "sha256": "574e94048b90c568006f09b485b027024ba2742116c3b6891575e0ce5e639aae"
+    },
+    {
+      "filename": "customers.csv",
+      "row_count": 100,
+      "sha256": "68efa8d8f51d4a8dfbf8fa62c9efa72f548c9b513f3ad921d66ea0fa6f00908a"
+    },
+    {
+      "filename": "policies.csv",
+      "row_count": 250,
+      "sha256": "6261a8f486f12e850dd7c0b46dd1ef32143a938aad714bbe409006b046494075"
+    },
+    {
+      "filename": "coverages.csv",
+      "row_count": 565,
+      "sha256": "af276411a0c8e7967a6f545b8e545e9370bb5f35ec29f85bd51f2ebbd361ee93"
+    },
+    {
+      "filename": "claims.csv",
+      "row_count": 30,
+      "sha256": "4669d0e769fe4e40af2dddd3d0c54b7b228af8e1b8d8393659b089e67568e199"
+    },
+    {
+      "filename": "payments.csv",
+      "row_count": 669,
+      "sha256": "4cd197032f17cd126c5fd4b64ed7475d91eb56debc5e746226bf45cbda9fbb99"
+    },
+    {
+      "filename": "interactions.csv",
+      "row_count": 200,
+      "sha256": "3a98b7163ace66522d908d29335da430d3c1bb71335b8157c78a49e36fd67a6e"
+    },
+    {
+      "filename": "transcripts.csv",
+      "row_count": 50,
+      "sha256": "ecad0a802f0008167db7e19a7ae7681517a8a3411dd4e43649a59fb9c92da2e0"
+    },
+    {
+      "filename": "scenario_expectations.csv",
+      "row_count": 33,
+      "sha256": "bd98d64b05d0b14bd182303a4f327f11ca2609e93d3fb34ae4f97c615e88de6c"
+    }
+  ]
+}
