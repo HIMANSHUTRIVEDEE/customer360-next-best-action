@@ -111,7 +111,7 @@ CREATE OR REPLACE SEMANTIC VIEW SV_CUSTOMER_360
       COMMENT = 'Unique customer identifier assigned by the carrier',
 
     customer.customer_name
-      AS first_name || '' '' || last_name
+      AS first_name || ' ' || last_name
       WITH SYNONYMS = ('customer name', 'name', 'policyholder name', 'full name')
       COMMENT = 'Full name of the customer (first + last)',
 
