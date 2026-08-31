@@ -6,7 +6,7 @@ Unified view: identity, policies, payments, interaction timeline with sentiment.
 import streamlit as st
 import json
 
-from app import run_query
+from helpers import run_query
 
 
 # ---------------------------------------------------------------------------

@@ -5,7 +5,7 @@ Home — Customer search and high-risk dashboard.
 import streamlit as st
 
 # Import shared helpers from app.py
-from app import run_query
+from helpers import run_query
 
 # ---------------------------------------------------------------------------
 # Landing page — customer search

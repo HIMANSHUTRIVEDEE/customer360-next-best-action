@@ -6,7 +6,7 @@ Primary recommendation, alternatives, evidence, confidence, and approval workflo
 import streamlit as st
 from datetime import datetime
 
-from app import run_query, execute_sql
+from helpers import run_query, execute_sql
 
 
 # ---------------------------------------------------------------------------

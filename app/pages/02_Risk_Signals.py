@@ -5,7 +5,7 @@ Named, weighted, directional risk signals with evidence text.
 
 import streamlit as st
 
-from app import run_query
+from helpers import run_query
 
 
 # ---------------------------------------------------------------------------
