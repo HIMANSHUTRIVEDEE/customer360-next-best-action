@@ -6,30 +6,7 @@ Primary recommendation, alternatives, evidence, confidence, and approval workflo
 import streamlit as st
 from datetime import datetime
 
-st.set_page_config(page_title="Recommendations", page_icon="🎯", layout="wide")
-
-
-def _get_session():
-    try:
-        from snowflake.snowpark.context import get_active_session
-        return get_active_session()
-    except Exception:
-        import os
-        conn_name = os.getenv("SNOWFLAKE_DEFAULT_CONNECTION_NAME", "default")
-        return st.connection("snowflake", connection_name=conn_name).session()
-
-
-@st.cache_resource
-def get_session():
-    return _get_session()
-
-
-def run_query(sql: str):
-    return get_session().sql(sql).to_pandas()
-
-
-def execute_sql(sql: str):
-    get_session().sql(sql).collect()
+from app import run_query, execute_sql
 
 
 # ---------------------------------------------------------------------------

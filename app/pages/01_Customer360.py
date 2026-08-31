@@ -6,26 +6,7 @@ Unified view: identity, policies, payments, interaction timeline with sentiment.
 import streamlit as st
 import json
 
-st.set_page_config(page_title="Customer 360", page_icon="👤", layout="wide")
-
-
-def _get_session():
-    try:
-        from snowflake.snowpark.context import get_active_session
-        return get_active_session()
-    except Exception:
-        import os
-        conn_name = os.getenv("SNOWFLAKE_DEFAULT_CONNECTION_NAME", "default")
-        return st.connection("snowflake", connection_name=conn_name).session()
-
-
-@st.cache_resource
-def get_session():
-    return _get_session()
-
-
-def run_query(sql: str):
-    return get_session().sql(sql).to_pandas()
+from app import run_query
 
 
 # ---------------------------------------------------------------------------
