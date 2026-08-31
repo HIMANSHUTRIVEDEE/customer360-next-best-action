@@ -4,8 +4,7 @@ Home — Customer search and high-risk dashboard.
 
 import streamlit as st
 
-# Import shared helpers from app.py
-from helpers import run_query
+from helpers import run_query, get_customer_options, parse_customer_selection
 
 # ---------------------------------------------------------------------------
 # Landing page — customer search
@@ -16,15 +15,20 @@ st.caption("Decision-support for insurance service representatives")
 
 st.markdown("---")
 
-# Search bar
-search_term = st.text_input(
+# Autocomplete customer search
+options = get_customer_options()
+
+selected = st.selectbox(
     "Search by customer name or ID",
-    placeholder="e.g. Maria Chen or CUST-001",
+    options=options,
+    index=None,
+    placeholder="Type to search — e.g. Maria Chen or CUST-001",
     key="customer_search",
 )
 
-if search_term:
-    safe_term = search_term.replace("'", "''")
+if selected:
+    customer_id = parse_customer_selection(selected)
+    safe_id = customer_id.replace("'", "''")
     df = run_query(f"""
         SELECT
             customer_id,
@@ -38,41 +42,36 @@ if search_term:
             nba_confidence_level,
             system_status
         FROM CUSTOMER360_DB.ANALYTICS.CUSTOMER_360_ENRICHED
-        WHERE LOWER(first_name || ' ' || last_name) LIKE LOWER('%{safe_term}%')
-           OR LOWER(customer_id) LIKE LOWER('%{safe_term}%')
-        ORDER BY composite_risk_score DESC
-        LIMIT 20
+        WHERE customer_id = '{safe_id}'
     """)
 
     if df.empty:
-        st.warning("No customers found.")
+        st.warning("Customer not found.")
     else:
-        st.subheader(f"{len(df)} result(s)")
+        row = df.iloc[0]
+        st.subheader(f"{row['CUSTOMER_NAME']}")
 
         def risk_color(tier):
             return {"critical": "🔴", "high": "🟠", "medium": "🟡", "low": "🟢"}.get(
                 str(tier).lower(), "⚪"
             )
 
-        df["RISK"] = df["RISK_TIER"].apply(risk_color) + " " + df["RISK_TIER"].astype(str)
-
-        for _, row in df.iterrows():
-            col1, col2, col3, col4 = st.columns([2, 1, 2, 1])
-            with col1:
-                st.markdown(f"**{row['CUSTOMER_NAME']}** (`{row['CUSTOMER_ID']}`)")
-            with col2:
-                st.markdown(row["RISK"])
-            with col3:
-                renewal_txt = (
-                    f"Renewal in **{int(row['DAYS_TO_RENEWAL'])}d**"
-                    if row["DAYS_TO_RENEWAL"] and row["DAYS_TO_RENEWAL"] > 0
-                    else "No upcoming renewal"
-                )
-                st.markdown(renewal_txt)
-            with col4:
-                if st.button("View", key=f"btn_{row['CUSTOMER_ID']}"):
-                    st.session_state["selected_customer_id"] = row["CUSTOMER_ID"]
-                    st.switch_page("pages/01_Customer360.py")
+        col1, col2, col3, col4 = st.columns([2, 1, 2, 1])
+        with col1:
+            st.markdown(f"**{row['CUSTOMER_NAME']}** (`{row['CUSTOMER_ID']}`)")
+        with col2:
+            st.markdown(f"{risk_color(row['RISK_TIER'])} {row['RISK_TIER']}")
+        with col3:
+            renewal_txt = (
+                f"Renewal in **{int(row['DAYS_TO_RENEWAL'])}d**"
+                if row["DAYS_TO_RENEWAL"] and row["DAYS_TO_RENEWAL"] > 0
+                else "No upcoming renewal"
+            )
+            st.markdown(renewal_txt)
+        with col4:
+            if st.button("View", key=f"btn_{row['CUSTOMER_ID']}"):
+                st.session_state["selected_customer_id"] = row["CUSTOMER_ID"]
+                st.switch_page("pages/01_Customer360.py")
 
 else:
     # Default: show high-risk customers
