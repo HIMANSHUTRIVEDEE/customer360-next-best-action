@@ -70,27 +70,6 @@ def call_agent(user_text: str) -> str:
     return "\n\n".join(text_parts) if text_parts else "No response from agent."
 
 
-# --- render existing messages ---
-for msg in st.session_state.messages:
-    with st.chat_message(msg["role"]):
-        st.markdown(msg["content"])
-
-# --- chat input ---
-if prompt := st.chat_input("Ask about customers, risk, claims, recommendations..."):
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user"):
-        st.markdown(prompt)
-
-    with st.chat_message("assistant"):
-        with st.spinner("Thinking..."):
-            try:
-                reply = call_agent(prompt)
-            except Exception as e:
-                reply = f"Error contacting agent: {e}"
-        st.markdown(reply)
-
-    st.session_state.messages.append({"role": "assistant", "content": reply})
-
 # --- sidebar controls ---
 with st.sidebar:
     st.markdown("---")
@@ -99,6 +78,7 @@ with st.sidebar:
         st.session_state.messages = []
         st.session_state.thread_id = None
         st.session_state.parent_message_id = 0
+        st.session_state.pending_question = None
         st.rerun()
 
     st.markdown("---")
@@ -112,5 +92,31 @@ with st.sidebar:
     ]
     for s in suggestions:
         if st.button(s, key=f"sug_{s[:20]}", width="stretch"):
-            st.session_state.messages.append({"role": "user", "content": s})
+            st.session_state.pending_question = s
             st.rerun()
+
+# --- determine the active prompt (chat input or suggestion click) ---
+pending = st.session_state.pop("pending_question", None) if "pending_question" in st.session_state else None
+chat_prompt = st.chat_input("Ask about customers, risk, claims, recommendations...")
+active_prompt = pending or chat_prompt
+
+# --- render existing messages ---
+for msg in st.session_state.messages:
+    with st.chat_message(msg["role"]):
+        st.markdown(msg["content"])
+
+# --- process the active prompt ---
+if active_prompt:
+    st.session_state.messages.append({"role": "user", "content": active_prompt})
+    with st.chat_message("user"):
+        st.markdown(active_prompt)
+
+    with st.chat_message("assistant"):
+        with st.spinner("Thinking..."):
+            try:
+                reply = call_agent(active_prompt)
+            except Exception as e:
+                reply = f"Error contacting agent: {e}"
+        st.markdown(reply)
+
+    st.session_state.messages.append({"role": "assistant", "content": reply})
