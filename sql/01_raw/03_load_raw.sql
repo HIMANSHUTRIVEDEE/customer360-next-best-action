@@ -23,21 +23,22 @@ SET batch_id = (SELECT 'BATCH-' || TO_VARCHAR(CURRENT_TIMESTAMP(), 'YYYYMMDD-HH2
 -- Windows file URIs are quoted and use forward slashes.
 -- These PUT statements must be executed by a client that supports local PUT.
 -- =============================================================================
-PUT 'file://C:/Users/himan/customer360-next-best-action/data/generated/service_representatives.csv'
+
+PUT 'file://C:/Users/kisha/OneDrive/Desktop/coco_hack/customer360-next-best-action/data/generated/scenario_expectations.csv'
     @CUSTOMER360_DB.RAW.C360_LOAD_STAGE AUTO_COMPRESS=FALSE OVERWRITE=TRUE;
-PUT 'file://C:/Users/himan/customer360-next-best-action/data/generated/customers.csv'
+PUT 'file://C:/Users/kisha/OneDrive/Desktop/coco_hack/customer360-next-best-action/data/generated/customers.csv'
     @CUSTOMER360_DB.RAW.C360_LOAD_STAGE AUTO_COMPRESS=FALSE OVERWRITE=TRUE;
-PUT 'file://C:/Users/himan/customer360-next-best-action/data/generated/policies.csv'
+PUT 'file://C:/Users/kisha/OneDrive/Desktop/coco_hack/customer360-next-best-action/data/generated/policies.csv'
     @CUSTOMER360_DB.RAW.C360_LOAD_STAGE AUTO_COMPRESS=FALSE OVERWRITE=TRUE;
-PUT 'file://C:/Users/himan/customer360-next-best-action/data/generated/coverages.csv'
+PUT 'file://C:/Users/kisha/OneDrive/Desktop/coco_hack/customer360-next-best-action/data/generated/coverages.csv'
     @CUSTOMER360_DB.RAW.C360_LOAD_STAGE AUTO_COMPRESS=FALSE OVERWRITE=TRUE;
-PUT 'file://C:/Users/himan/customer360-next-best-action/data/generated/claims.csv'
+PUT 'file://C:/Users/kisha/OneDrive/Desktop/coco_hack/customer360-next-best-action/data/generated/claims.csv'
     @CUSTOMER360_DB.RAW.C360_LOAD_STAGE AUTO_COMPRESS=FALSE OVERWRITE=TRUE;
-PUT 'file://C:/Users/himan/customer360-next-best-action/data/generated/payments.csv'
+PUT 'file://C:/Users/kisha/OneDrive/Desktop/coco_hack/customer360-next-best-action/data/generated/payments.csv'
     @CUSTOMER360_DB.RAW.C360_LOAD_STAGE AUTO_COMPRESS=FALSE OVERWRITE=TRUE;
-PUT 'file://C:/Users/himan/customer360-next-best-action/data/generated/interactions.csv'
+PUT 'file://C:/Users/kisha/OneDrive/Desktop/coco_hack/customer360-next-best-action/data/generated/interactions.csv'
     @CUSTOMER360_DB.RAW.C360_LOAD_STAGE AUTO_COMPRESS=FALSE OVERWRITE=TRUE;
-PUT 'file://C:/Users/himan/customer360-next-best-action/data/generated/transcripts.csv'
+PUT 'file://C:/Users/kisha/OneDrive/Desktop/coco_hack/customer360-next-best-action/data/generated/transcripts.csv'
     @CUSTOMER360_DB.RAW.C360_LOAD_STAGE AUTO_COMPRESS=FALSE OVERWRITE=TRUE;
 
 -- Confirm staged files before any table is truncated or loaded.

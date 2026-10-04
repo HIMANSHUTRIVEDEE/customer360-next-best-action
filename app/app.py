@@ -18,6 +18,7 @@ pg = st.navigation([
     st.Page("pages/01_Customer360.py", title="Customer 360", icon="👤"),
     st.Page("pages/02_Risk_Signals.py", title="Risk Signals", icon="📊"),
     st.Page("pages/03_NBA_Recommendations.py", title="Recommendations", icon="🎯"),
+    st.Page("pages/04_AI_Assistant.py", title="AI Assistant", icon="💬"),
 ])
 
 pg.run()
