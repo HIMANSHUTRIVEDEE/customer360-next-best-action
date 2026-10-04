@@ -83,12 +83,26 @@ with st.sidebar:
 
     st.markdown("---")
     st.markdown("**Suggested questions:**")
+    st.caption("Structured (Analyst)")
     suggestions = [
         "How many high-risk customers do we have?",
         "What is the risk profile for CUST-001?",
         "Which customers are renewing in the next 30 days?",
-        "What recommendation was generated for CUST-005?",
-        "What is the average risk score across all customers?",
+    ]
+    for s in suggestions:
+        if st.button(s, key=f"sug_{s[:20]}", width="stretch"):
+            st.session_state.pending_question = s
+            st.rerun()
+
+    st.markdown("---")
+    st.caption("Unstructured (Search)")
+    suggestions = [
+        "What does Maria Chen's auto policy cover?",
+        "Show me the latest email from CUST-005",
+        "What is the escalation procedure for complaints?",
+        "What did CUST-002 say in their last call?",
+        "What are the cross-sell eligibility rules?",
+        "What is the renewal discount policy?",
     ]
     for s in suggestions:
         if st.button(s, key=f"sug_{s[:20]}", width="stretch"):
