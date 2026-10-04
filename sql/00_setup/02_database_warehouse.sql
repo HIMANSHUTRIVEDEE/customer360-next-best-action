@@ -15,11 +15,11 @@ CREATE DATABASE IF NOT EXISTS CUSTOMER360_DB
 -- Warehouse — X-Small for development; auto-suspend after 60 seconds
 -- -----------------------------------------------------------------------------
 CREATE WAREHOUSE IF NOT EXISTS CUSTOMER360_WH
-    WAREHOUSE_SIZE = 'X-SMALL'
-    AUTO_SUSPEND = 60
+    WAREHOUSE_SIZE = 'SMALL'
+    AUTO_SUSPEND = 360
     AUTO_RESUME = TRUE
     INITIALLY_SUSPENDED = TRUE
-    STATEMENT_TIMEOUT_IN_SECONDS = 300
+    STATEMENT_TIMEOUT_IN_SECONDS = 360
     COMMENT = 'Customer360 compute. XS for prototype. Auto-suspend 60s. Statement timeout 5 min cost guard.';
 
 -- -----------------------------------------------------------------------------
