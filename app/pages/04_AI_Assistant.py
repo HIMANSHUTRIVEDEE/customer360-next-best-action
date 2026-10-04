@@ -33,33 +33,36 @@ def call_agent(user_text: str) -> str:
         ],
     }
 
-    # If we already have a thread, continue the conversation
     if st.session_state.thread_id is not None:
         request_body["thread_id"] = st.session_state.thread_id
         request_body["parent_message_id"] = st.session_state.parent_message_id
 
-    request_json = json.dumps(request_body)
-    create_thread = st.session_state.thread_id is None
+    request_json = json.dumps(request_body).replace("'", "\\'")
+    create_thread = "TRUE" if st.session_state.thread_id is None else "FALSE"
 
-    sql = f"""
-        SELECT TRY_PARSE_JSON(
-            SNOWFLAKE.CORTEX.DATA_AGENT_RUN(
-                '{AGENT_FQN}',
-                $${request_json}$$,
-                {str(create_thread).upper()}
-            )
-        ) AS resp
-    """
+    sql = (
+        f"SELECT SNOWFLAKE.CORTEX.DATA_AGENT_RUN("
+        f"'{AGENT_FQN}', '{request_json}', {create_thread}"
+        f") AS resp"
+    )
 
     result = session.sql(sql).collect()
-    resp = json.loads(result[0]["RESP"])
+    raw = result[0]["RESP"]
+    if raw is None:
+        return "Agent returned no response."
+
+    resp = json.loads(str(raw)) if not isinstance(raw, dict) else raw
+
+    # Handle error responses
+    if "message" in resp and "content" not in resp:
+        return f"Agent error: {resp.get('message', 'Unknown error')}"
 
     # Extract thread_id from metadata for multi-turn conversations
     metadata = resp.get("metadata", {})
     if "thread_id" in metadata:
         st.session_state.thread_id = metadata["thread_id"]
-    if "message_id" in metadata:
-        st.session_state.parent_message_id = metadata["message_id"]
+    if "assistant_message_id" in metadata:
+        st.session_state.parent_message_id = metadata["assistant_message_id"]
 
     # Extract text content from the response
     content_parts = resp.get("content", [])
@@ -92,7 +95,7 @@ if prompt := st.chat_input("Ask about customers, risk, claims, recommendations..
 with st.sidebar:
     st.markdown("---")
     st.subheader("Chat Controls")
-    if st.button("Clear conversation", use_container_width=True):
+    if st.button("Clear conversation", width="stretch"):
         st.session_state.messages = []
         st.session_state.thread_id = None
         st.session_state.parent_message_id = 0
@@ -108,6 +111,6 @@ with st.sidebar:
         "What is the average risk score across all customers?",
     ]
     for s in suggestions:
-        if st.button(s, key=f"sug_{s[:20]}", use_container_width=True):
+        if st.button(s, key=f"sug_{s[:20]}", width="stretch"):
             st.session_state.messages.append({"role": "user", "content": s})
             st.rerun()
