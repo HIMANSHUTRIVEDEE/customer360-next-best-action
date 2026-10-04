@@ -6,7 +6,7 @@ Unified view: identity, policies, payments, interaction timeline with sentiment.
 import streamlit as st
 import json
 
-from helpers import run_query
+from helpers import run_query, get_customer_options, parse_customer_selection
 
 
 # ---------------------------------------------------------------------------
@@ -16,9 +16,17 @@ from helpers import run_query
 customer_id = st.session_state.get("selected_customer_id")
 
 if not customer_id:
-    st.info("Select a customer from the home page, or enter an ID below.")
-    customer_id = st.text_input("Customer ID", placeholder="CUST-001")
-    if customer_id:
+    st.info("Select a customer below, or pick one from the Home page.")
+    options = get_customer_options()
+    selected = st.selectbox(
+        "Search customer",
+        options=options,
+        index=None,
+        placeholder="Type to search — e.g. Maria Chen or CUST-001",
+        key="c360_customer_select",
+    )
+    if selected:
+        customer_id = parse_customer_selection(selected)
         st.session_state["selected_customer_id"] = customer_id
     else:
         st.stop()

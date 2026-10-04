@@ -129,7 +129,6 @@ CREATE OR REPLACE SEMANTIC VIEW SV_CUSTOMER_360
       COMMENT = 'Date when the customer relationship began',
 
     customer.customer_status
-      LABELS = (FILTER)
       AS customer_status
       WITH SYNONYMS = ('status', 'account status')
       COMMENT = 'Current customer lifecycle status: active, inactive, or prospect'
@@ -137,13 +136,11 @@ CREATE OR REPLACE SEMANTIC VIEW SV_CUSTOMER_360
       IS_ENUM,
 
     customer.state
-      LABELS = (FILTER)
       AS state
       WITH SYNONYMS = ('customer state', 'location', 'us state')
       COMMENT = 'US state code of customer address',
 
     customer.city
-      LABELS = (FILTER)
       AS city
       COMMENT = 'City of customer address',
 
@@ -168,11 +165,9 @@ CREATE OR REPLACE SEMANTIC VIEW SV_CUSTOMER_360
       COMMENT = 'Number of distinct product types held (auto, home, umbrella, renters)',
 
     customer.product_holdings
-      LABELS = (FILTER)
       AS product_holdings
       WITH SYNONYMS = ('products', 'product types', 'lines of business', 'policy types')
-      COMMENT = 'Comma-separated list of product types the customer holds'
-      SAMPLE_VALUES ('auto', 'home', 'auto, home', 'auto, home, umbrella', 'renters'),
+      COMMENT = 'Comma-separated list of product types the customer holds',
 
     customer.nearest_renewal_date
       AS nearest_renewal_date
@@ -250,7 +245,6 @@ CREATE OR REPLACE SEMANTIC VIEW SV_CUSTOMER_360
       COMMENT = 'Timestamp of the most recent customer interaction',
 
     customer.latest_channel
-      LABELS = (FILTER)
       AS latest_channel
       WITH SYNONYMS = ('last channel', 'contact channel')
       COMMENT = 'Channel of the most recent interaction'
@@ -273,7 +267,6 @@ CREATE OR REPLACE SEMANTIC VIEW SV_CUSTOMER_360
       COMMENT = 'Number of interactions with completed AI enrichment in the last 90 days',
 
     customer.sentiment_direction
-      LABELS = (FILTER)
       AS sentiment_direction
       WITH SYNONYMS = ('sentiment trend', 'sentiment change', 'mood trend')
       COMMENT = 'Direction of sentiment change: worsening, stable, improving, or insufficient_data'
@@ -282,7 +275,6 @@ CREATE OR REPLACE SEMANTIC VIEW SV_CUSTOMER_360
 
     -- Risk dimensions
     customer.risk_tier
-      LABELS = (FILTER)
       AS risk_tier
       WITH SYNONYMS = ('risk level', 'risk category', 'risk rating', 'churn risk')
       COMMENT = 'Overall risk classification: critical, high, medium, or low. Based on weighted composite of 7 risk signals.'
@@ -290,7 +282,6 @@ CREATE OR REPLACE SEMANTIC VIEW SV_CUSTOMER_360
       IS_ENUM,
 
     customer.risk_direction
-      LABELS = (FILTER)
       AS risk_direction
       WITH SYNONYMS = ('risk trend', 'risk change')
       COMMENT = 'Direction of overall risk: worsening, stable, or improving'
@@ -307,7 +298,6 @@ CREATE OR REPLACE SEMANTIC VIEW SV_CUSTOMER_360
 
     -- NBA dimensions
     customer.nba_action_type
-      LABELS = (FILTER)
       AS nba_action_type
       WITH SYNONYMS = ('recommended action', 'next best action', 'NBA', 'action type', 'recommendation')
       COMMENT = 'Type of the primary recommended action for this customer'
@@ -320,7 +310,6 @@ CREATE OR REPLACE SEMANTIC VIEW SV_CUSTOMER_360
       COMMENT = 'Human-readable name of the recommended action',
 
     customer.nba_action_category
-      LABELS = (FILTER)
       AS nba_action_category
       WITH SYNONYMS = ('action category')
       COMMENT = 'Category of the recommended action: retention, service, sales, or administrative'
@@ -328,7 +317,6 @@ CREATE OR REPLACE SEMANTIC VIEW SV_CUSTOMER_360
       IS_ENUM,
 
     customer.nba_confidence_level
-      LABELS = (FILTER)
       AS nba_confidence_level
       WITH SYNONYMS = ('confidence', 'recommendation confidence')
       COMMENT = 'Confidence in the NBA recommendation: high, medium_high, medium, or low'
@@ -337,7 +325,6 @@ CREATE OR REPLACE SEMANTIC VIEW SV_CUSTOMER_360
 
     -- System status dimensions
     customer.system_status
-      LABELS = (FILTER)
       AS system_status
       WITH SYNONYMS = ('data status', 'system health')
       COMMENT = 'Operational status: full (all data available), degraded_no_enrichment, degraded_no_recommendation, or low_confidence'
