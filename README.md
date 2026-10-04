@@ -2,6 +2,12 @@
 
 An enterprise-ready decision-support application for insurance customer service. Built entirely on Snowflake using Cortex Code (CoCo) as the primary development interface.
 
+## Demo Video
+
+https://github.com/user-attachments/assets/Video+Project.mp4
+
+> **[Watch the demo](Video%20Project.mp4)** — 2-minute walkthrough covering Home dashboard, Customer 360 profile, Risk Signals, NBA Recommendations, and the AI Assistant chatbot.
+
 ---
 
 ## Problem
