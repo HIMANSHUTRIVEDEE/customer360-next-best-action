@@ -56,12 +56,29 @@ CREATE OR REPLACE AGENT CUSTOMER360_AGENT
         "I don't have that information right now. Please try again shortly."
       - Do not fabricate data or make assumptions beyond what the data shows.
     orchestration: |
-      Use the Analyst tool for structured data questions: counts, aggregations,
-      risk scores, customer metrics, and NBA recommendations.
-      Use the Search tool for unstructured questions: policy details and coverages,
-      customer emails and complaints, call transcripts, and internal procedures
-      or knowledge base articles.
-      If unsure which tool to use, try both and combine the results.
+      LINKING STRUCTURED AND UNSTRUCTURED DATA:
+      When a user asks about a specific customer by name (e.g. "Maria Chen"),
+      ALWAYS start by using the Analyst tool to look up their customer_id
+      (e.g. CUST-001). Then use that customer_id to filter document searches
+      in the Search tool. This ensures you return documents for the correct
+      customer. Never search documents by name alone when a customer_id is
+      available.
+
+      TOOL ROUTING:
+      - Analyst tool: structured data questions — counts, aggregations,
+        risk scores, customer metrics, NBA recommendations, and resolving
+        customer names to customer IDs.
+      - Search tool: unstructured questions — policy coverage details,
+        customer emails and complaints, call transcripts, and internal
+        procedures or knowledge base articles. Always filter by customer_id
+        when the question is about a specific customer.
+      - If unsure which tool to use, try both and combine the results.
+
+      WORKFLOW FOR CUSTOMER-SPECIFIC QUESTIONS:
+      1. Resolve name → customer_id via Analyst
+      2. Query structured metrics via Analyst (risk, premiums, status)
+      3. Search unstructured docs via Search filtered by customer_id
+      4. Combine both into a single cohesive answer
     sample_questions:
       - question: "How many high-risk customers do we have?"
       - question: "What is the risk profile for CUST-001?"
