@@ -168,11 +168,9 @@ CREATE OR REPLACE SEMANTIC VIEW SV_CUSTOMER_360
       COMMENT = 'Number of distinct product types held (auto, home, umbrella, renters)',
 
     customer.product_holdings
-      LABELS = (FILTER)
       AS product_holdings
       WITH SYNONYMS = ('products', 'product types', 'lines of business', 'policy types')
-      COMMENT = 'Comma-separated list of product types the customer holds'
-      SAMPLE_VALUES ('auto', 'home', 'auto, home', 'auto, home, umbrella', 'renters'),
+      COMMENT = 'Comma-separated list of product types the customer holds',
 
     customer.nearest_renewal_date
       AS nearest_renewal_date
